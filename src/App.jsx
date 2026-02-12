@@ -1,26 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
-
-// ============================================
-// SUPABASE CLIENT
-// ============================================
-const SUPABASE_URL = "https://fksmaxeyturvoywglvuq.supabase.co";
-const SUPABASE_KEY = "sb_publishable_ikBj2-iZABWzZFotn9sRng_FxZnUv15";
-
-async function supaFetch(path, options = {}) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    ...options,
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`,
-      "Content-Type": "application/json",
-      Prefer: options.method === "POST" ? "return=representation" : undefined,
-      ...options.headers,
-    },
-  });
-  if (!res.ok) return null;
-  const text = await res.text();
-  return text ? JSON.parse(text) : null;
-}
+import { supabase } from "./supabaseClient";
 
 // ============================================
 // 25-CARD REWARDS DATABASE
@@ -347,20 +326,68 @@ export default function CardAdvisor() {
   const [search, setSearch] = useState("");
   const ref = useRef(null);
 
-  // Load from localStorage
+  // Auth state
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const skipNextSave = useRef(false);
+
+  // Listen for auth changes
   useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signIn = () => supabase.auth.signInWithOAuth({ provider: "google" });
+  const signOut = () => supabase.auth.signOut();
+
+  // Load wallet: from Supabase if logged in, else localStorage
+  useEffect(() => {
+    if (authLoading) return;
+    if (user) {
+      supabase
+        .from("user_wallets")
+        .select("card_ids")
+        .eq("user_id", user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data?.card_ids) {
+            skipNextSave.current = true;
+            setSel(data.card_ids);
+          }
+        });
+    } else {
+      try {
+        const s = window.localStorage?.getItem?.("ca_cards");
+        if (s) { skipNextSave.current = true; setSel(JSON.parse(s)); }
+      } catch {}
+    }
     try {
-      const s = window.localStorage?.getItem?.("ca_cards");
-      if (s) setSel(JSON.parse(s));
       const l = window.localStorage?.getItem?.("ca_lookups");
       if (l) setLookups(parseInt(l));
       const t = window.localStorage?.getItem?.("ca_saved");
       if (t) setTotalSaved(parseFloat(t));
     } catch {}
-  }, []);
+  }, [user, authLoading]);
 
-  // Save to localStorage
-  useEffect(() => { try { window.localStorage?.setItem?.("ca_cards", JSON.stringify(sel)); } catch {} }, [sel]);
+  // Save wallet: to Supabase if logged in, always to localStorage
+  useEffect(() => {
+    if (authLoading) return;
+    if (skipNextSave.current) { skipNextSave.current = false; return; }
+    try { window.localStorage?.setItem?.("ca_cards", JSON.stringify(sel)); } catch {}
+    if (user) {
+      supabase
+        .from("user_wallets")
+        .upsert({ user_id: user.id, card_ids: sel, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+    }
+  }, [sel, user, authLoading]);
+
+  // Save stats to localStorage (not worth syncing to Supabase)
   useEffect(() => { try { window.localStorage?.setItem?.("ca_lookups", lookups.toString()); } catch {} }, [lookups]);
   useEffect(() => { try { window.localStorage?.setItem?.("ca_saved", totalSaved.toString()); } catch {} }, [totalSaved]);
 
@@ -470,10 +497,28 @@ export default function CardAdvisor() {
 
       {/* Header */}
       <div style={{ padding:"24px 20px 16px",textAlign:"center",position:"relative",zIndex:1 }}>
-        <div style={{ display:"inline-flex",alignItems:"center",gap:"8px",padding:"5px 12px",borderRadius:"20px",
-          backgroundColor:"rgba(0,220,130,0.08)",border:"1px solid rgba(0,220,130,0.15)",marginBottom:"12px" }}>
-          <div style={{ width:"6px",height:"6px",borderRadius:"50%",backgroundColor:"#00DC82",animation:"pulse 2s ease-in-out infinite" }} />
-          <span style={{ fontFamily:"'Syne',sans-serif",fontSize:"11px",fontWeight:700,letterSpacing:"0.12em",textTransform:"uppercase",color:"#00DC82" }}>CardAdvisor</span>
+        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"12px" }}>
+          <div style={{ width:"80px" }} />
+          <div style={{ display:"inline-flex",alignItems:"center",gap:"8px",padding:"5px 12px",borderRadius:"20px",
+            backgroundColor:"rgba(0,220,130,0.08)",border:"1px solid rgba(0,220,130,0.15)" }}>
+            <div style={{ width:"6px",height:"6px",borderRadius:"50%",backgroundColor:"#00DC82",animation:"pulse 2s ease-in-out infinite" }} />
+            <span style={{ fontFamily:"'Syne',sans-serif",fontSize:"11px",fontWeight:700,letterSpacing:"0.12em",textTransform:"uppercase",color:"#00DC82" }}>CardAdvisor</span>
+          </div>
+          {!authLoading && (
+            user ? (
+              <button onClick={signOut} style={{ padding:"6px 14px",borderRadius:"20px",border:"1px solid rgba(255,255,255,0.1)",
+                backgroundColor:"rgba(255,255,255,0.04)",fontFamily:"'Syne',sans-serif",fontSize:"10px",fontWeight:700,
+                color:"rgba(255,255,255,0.5)",cursor:"pointer",letterSpacing:"0.05em",width:"80px" }}>
+                Sign out
+              </button>
+            ) : (
+              <button onClick={signIn} style={{ padding:"6px 14px",borderRadius:"20px",border:"1px solid rgba(0,220,130,0.2)",
+                backgroundColor:"rgba(0,220,130,0.06)",fontFamily:"'Syne',sans-serif",fontSize:"10px",fontWeight:700,
+                color:"#00DC82",cursor:"pointer",letterSpacing:"0.05em",width:"80px" }}>
+                Sign in
+              </button>
+            )
+          )}
         </div>
         <h1 style={{ fontFamily:"'Syne',sans-serif",fontSize:"26px",fontWeight:800,letterSpacing:"-0.03em",lineHeight:1.15,
           background:"linear-gradient(135deg,#FFF 0%,rgba(255,255,255,0.6) 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent" }}>
