@@ -352,24 +352,33 @@ export default function CardAdvisor() {
 
   // Load wallet: from Supabase if logged in, else localStorage
   useEffect(() => {
-    if (authLoading) return;
+    console.log("[LOAD] effect fired — authLoading:", authLoading, "user:", user?.id ?? null);
+    if (authLoading) { console.log("[LOAD] still loading auth, skipping"); return; }
     walletLoaded.current = false;
     if (user) {
+      console.log("[LOAD] fetching wallet from Supabase for user:", user.id);
       supabase
         .from("user_wallets")
         .select("card_ids")
         .eq("user_id", user.id)
         .maybeSingle()
         .then(({ data, error }) => {
+          console.log("[LOAD] Supabase response — data:", data, "error:", error);
           if (error) console.error("Wallet load error:", error);
           if (data?.card_ids?.length) {
+            console.log("[LOAD] setting sel to", data.card_ids);
             setSel(data.card_ids);
+          } else {
+            console.log("[LOAD] no card_ids found in Supabase (data was:", data, ")");
           }
           walletLoaded.current = true;
+          console.log("[LOAD] walletLoaded set to true");
         });
     } else {
+      console.log("[LOAD] no user, loading from localStorage");
       try {
         const s = window.localStorage?.getItem?.("ca_cards");
+        console.log("[LOAD] localStorage ca_cards:", s);
         if (s) setSel(JSON.parse(s));
       } catch {}
       walletLoaded.current = true;
@@ -386,16 +395,20 @@ export default function CardAdvisor() {
   // Only depends on [sel] — NOT on user/authLoading — so it only fires
   // when the user actually changes their card selection, never on auth changes.
   useEffect(() => {
-    if (!walletLoaded.current) return;
+    console.log("[SAVE] effect fired — sel:", sel, "walletLoaded:", walletLoaded.current, "userRef:", userRef.current?.id ?? null);
+    if (!walletLoaded.current) { console.log("[SAVE] walletLoaded is false, skipping"); return; }
     try { window.localStorage?.setItem?.("ca_cards", JSON.stringify(sel)); } catch {}
     if (userRef.current) {
+      const payload = { user_id: userRef.current.id, card_ids: sel, updated_at: new Date().toISOString() };
+      console.log("[SAVE] upserting to Supabase:", payload);
       supabase
         .from("user_wallets")
-        .upsert(
-          { user_id: userRef.current.id, card_ids: sel, updated_at: new Date().toISOString() },
-          { onConflict: "user_id" }
-        )
-        .then(({ error }) => { if (error) console.error("Wallet save error:", error); });
+        .upsert(payload, { onConflict: "user_id" })
+        .then(({ data, error }) => {
+          console.log("[SAVE] Supabase upsert response — data:", data, "error:", error);
+        });
+    } else {
+      console.log("[SAVE] no user, saved to localStorage only");
     }
   }, [sel]);
 
