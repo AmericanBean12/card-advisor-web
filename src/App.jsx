@@ -329,7 +329,8 @@ export default function CardAdvisor() {
   // Auth state
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const skipNextSave = useRef(false);
+  const walletLoaded = useRef(false);
+  const userRef = useRef(null);
 
   // Listen for auth changes
   useEffect(() => {
@@ -343,29 +344,35 @@ export default function CardAdvisor() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Keep userRef in sync so the save effect can read it without depending on it
+  useEffect(() => { userRef.current = user; }, [user]);
+
   const signIn = () => supabase.auth.signInWithOAuth({ provider: "google" });
   const signOut = () => supabase.auth.signOut();
 
   // Load wallet: from Supabase if logged in, else localStorage
   useEffect(() => {
     if (authLoading) return;
+    walletLoaded.current = false;
     if (user) {
       supabase
         .from("user_wallets")
         .select("card_ids")
         .eq("user_id", user.id)
         .maybeSingle()
-        .then(({ data }) => {
-          if (data?.card_ids) {
-            skipNextSave.current = true;
+        .then(({ data, error }) => {
+          if (error) console.error("Wallet load error:", error);
+          if (data?.card_ids?.length) {
             setSel(data.card_ids);
           }
+          walletLoaded.current = true;
         });
     } else {
       try {
         const s = window.localStorage?.getItem?.("ca_cards");
-        if (s) { skipNextSave.current = true; setSel(JSON.parse(s)); }
+        if (s) setSel(JSON.parse(s));
       } catch {}
+      walletLoaded.current = true;
     }
     try {
       const l = window.localStorage?.getItem?.("ca_lookups");
@@ -375,19 +382,24 @@ export default function CardAdvisor() {
     } catch {}
   }, [user, authLoading]);
 
-  // Save wallet: to Supabase if logged in, always to localStorage
+  // Save wallet: to Supabase if logged in, always to localStorage.
+  // Only depends on [sel] — NOT on user/authLoading — so it only fires
+  // when the user actually changes their card selection, never on auth changes.
   useEffect(() => {
-    if (authLoading) return;
-    if (skipNextSave.current) { skipNextSave.current = false; return; }
+    if (!walletLoaded.current) return;
     try { window.localStorage?.setItem?.("ca_cards", JSON.stringify(sel)); } catch {}
-    if (user) {
+    if (userRef.current) {
       supabase
         .from("user_wallets")
-        .upsert({ user_id: user.id, card_ids: sel, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+        .upsert(
+          { user_id: userRef.current.id, card_ids: sel, updated_at: new Date().toISOString() },
+          { onConflict: "user_id" }
+        )
+        .then(({ error }) => { if (error) console.error("Wallet save error:", error); });
     }
-  }, [sel, user, authLoading]);
+  }, [sel]);
 
-  // Save stats to localStorage (not worth syncing to Supabase)
+  // Save stats to localStorage
   useEffect(() => { try { window.localStorage?.setItem?.("ca_lookups", lookups.toString()); } catch {} }, [lookups]);
   useEffect(() => { try { window.localStorage?.setItem?.("ca_saved", totalSaved.toString()); } catch {} }, [totalSaved]);
 
