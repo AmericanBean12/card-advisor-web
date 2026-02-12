@@ -2,7 +2,8 @@ import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { supabase } from "./supabaseClient";
 
 // ============================================
-// 25-CARD REWARDS DATABASE
+// Last updated: Feb 2026 — 50+ cards
+// REWARDS DATABASE
 // ============================================
 const CARDS_DATABASE = [
   // ---- AMERICAN EXPRESS ----
@@ -30,6 +31,20 @@ const CARDS_DATABASE = [
     color: "#00A4E4", gradient: "linear-gradient(135deg, #00A4E4 0%, #0077B5 100%)",
     categories: { groceries: 3, online_shopping: 3, gas: 3, dining: 1, streaming: 1, transit: 1, travel: 1, general: 1 },
   },
+  {
+    id: "amex-green", name: "American Express Green Card", issuer: "American Express", shortName: "Amex Green",
+    annualFee: 150, currency: "Membership Rewards",
+    color: "#2E8B57", gradient: "linear-gradient(135deg, #2E8B57 0%, #1B5E3A 100%)",
+    categories: { travel: 3, transit: 3, dining: 3, flights: 1, hotels: 1, groceries: 1, gas: 1, streaming: 1, online_shopping: 1, general: 1 },
+    note: "3x on travel, transit, and restaurants worldwide.",
+  },
+  {
+    id: "amex-business-gold", name: "American Express Business Gold", issuer: "American Express", shortName: "Amex Biz Gold",
+    annualFee: 375, currency: "Membership Rewards",
+    color: "#B8860B", gradient: "linear-gradient(135deg, #B8860B 0%, #8B6914 100%)",
+    categories: { flights: 4, online_shopping: 4, gas: 4, dining: 4, shipping: 4, groceries: 1, streaming: 1, transit: 1, travel: 1, general: 1 },
+    note: "4x on your top 2 categories each month from: airfare, advertising, gas, shipping, IT purchases, dining (up to $150K/yr).",
+  },
   // ---- CHASE ----
   {
     id: "chase-sapphire-reserve", name: "Chase Sapphire Reserve", issuer: "Chase", shortName: "Sapphire Reserve",
@@ -54,6 +69,20 @@ const CARDS_DATABASE = [
     annualFee: 0, currency: "Ultimate Rewards",
     color: "#3A7FCA", gradient: "linear-gradient(135deg, #3A7FCA 0%, #2260A0 100%)",
     categories: { dining: 3, drugstores: 3, travel: 5, groceries: 1, gas: 1, streaming: 1, online_shopping: 1, transit: 1, general: 1 },
+  },
+  {
+    id: "chase-sapphire-reserve-biz", name: "Chase Sapphire Reserve for Business", issuer: "Chase", shortName: "CSR Business",
+    annualFee: 550, currency: "Ultimate Rewards",
+    color: "#1A1F71", gradient: "linear-gradient(135deg, #1A1F71 0%, #0D1038 100%)",
+    categories: { hotels: 10, flights: 5, dining: 3, travel: 3, groceries: 1, gas: 1, streaming: 1, online_shopping: 1, transit: 1, general: 1 },
+    note: "10x on hotels via Chase Travel, 5x on flights via Chase Travel, 3x on dining and other travel.",
+  },
+  {
+    id: "chase-ink-preferred", name: "Chase Ink Business Preferred", issuer: "Chase", shortName: "Ink Preferred",
+    annualFee: 95, currency: "Ultimate Rewards",
+    color: "#1A1F71", gradient: "linear-gradient(135deg, #2C3E8C 0%, #1A1F71 100%)",
+    categories: { travel: 3, shipping: 3, online_shopping: 3, streaming: 3, phone_plans: 3, groceries: 1, gas: 1, dining: 1, transit: 1, general: 1 },
+    note: "3x on first $150K/yr in travel, shipping, internet/cable/phone, online ads. Business card.",
   },
   // ---- CAPITAL ONE ----
   {
@@ -80,6 +109,13 @@ const CARDS_DATABASE = [
     color: "#5A5A5A", gradient: "linear-gradient(135deg, #6A6A6A 0%, #4A4A4A 100%)",
     categories: { flights: 5, hotels: 5, car_rental: 5, dining: 1.5, groceries: 1.5, gas: 1.5, travel: 1.5, streaming: 1.5, online_shopping: 1.5, transit: 1.5, drugstores: 1.5, home_improvement: 1.5, general: 1.5 },
   },
+  {
+    id: "cap1-savor-one", name: "Capital One SavorOne", issuer: "Capital One", shortName: "SavorOne",
+    annualFee: 0, currency: "Cash Back",
+    color: "#004977", gradient: "linear-gradient(135deg, #004977 0%, #002A4A 100%)",
+    categories: { dining: 3, groceries: 3, streaming: 3, entertainment: 3, gas: 1, transit: 1, travel: 1, online_shopping: 1, general: 1 },
+    note: "3% on dining, groceries, streaming, entertainment. No annual fee.",
+  },
   // ---- CITI ----
   {
     id: "citi-double-cash", name: "Citi Double Cash", issuer: "Citi", shortName: "Double Cash",
@@ -98,6 +134,13 @@ const CARDS_DATABASE = [
     annualFee: 95, currency: "ThankYou Points",
     color: "#1A1A4E", gradient: "linear-gradient(135deg, #1A1A4E 0%, #2D2D7A 100%)",
     categories: { flights: 3, hotels: 3, dining: 3, groceries: 3, gas: 3, travel: 3, streaming: 1, online_shopping: 1, transit: 1, general: 1 },
+  },
+  {
+    id: "citi-strata-elite", name: "Citi Strata Elite", issuer: "Citi", shortName: "Strata Elite",
+    annualFee: 595, currency: "ThankYou Points",
+    color: "#003B70", gradient: "linear-gradient(135deg, #1A1A2E 0%, #003B70 100%)",
+    categories: { hotels: 12, flights: 6, dining: 3, groceries: 1.5, gas: 1.5, travel: 1.5, streaming: 1.5, online_shopping: 1.5, transit: 1.5, general: 1.5 },
+    note: "12x hotels via Citi Travel, 6x flights via Citi Travel, 3x restaurants, 1.5x everything else.",
   },
   // ---- WELLS FARGO ----
   {
@@ -125,6 +168,13 @@ const CARDS_DATABASE = [
     color: "#FF6B00", gradient: "linear-gradient(135deg, #FF6B00 0%, #CC5500 100%)",
     categories: { dining: 1, groceries: 1, gas: 1, travel: 1, streaming: 1, online_shopping: 1, transit: 1, general: 1 },
   },
+  {
+    id: "discover-it-chrome", name: "Discover it Chrome", issuer: "Discover", shortName: "Discover Chrome",
+    annualFee: 0, currency: "Cash Back",
+    color: "#FF6000", gradient: "linear-gradient(135deg, #FF6000 0%, #CC4D00 100%)",
+    categories: { dining: 2, gas: 2, groceries: 1, travel: 1, streaming: 1, online_shopping: 1, transit: 1, general: 1 },
+    note: "2% at gas stations and restaurants (on up to $1,000/qtr), 1% everything else. Cashback Match first year.",
+  },
   // ---- BANK OF AMERICA ----
   {
     id: "bofa-customized-cash", name: "Bank of America Customized Cash", issuer: "Bank of America", shortName: "BofA Custom Cash",
@@ -145,6 +195,20 @@ const CARDS_DATABASE = [
     color: "#1D2951", gradient: "linear-gradient(135deg, #1D2951 0%, #0F1730 100%)",
     categories: { streaming: 5, home_improvement: 5, gas: 2, groceries: 2, dining: 1, travel: 1, online_shopping: 1, transit: 1, general: 1 },
   },
+  {
+    id: "usbank-altitude-go", name: "U.S. Bank Altitude Go", issuer: "U.S. Bank", shortName: "Altitude Go",
+    annualFee: 0, currency: "Points",
+    color: "#0C2340", gradient: "linear-gradient(135deg, #0C2340 0%, #061224 100%)",
+    categories: { dining: 4, groceries: 2, gas: 2, streaming: 2, travel: 1, online_shopping: 1, transit: 1, general: 1 },
+    note: "4x on dining, 2x on groceries, gas stations, streaming, EV charging. No annual fee.",
+  },
+  {
+    id: "usbank-altitude-connect", name: "U.S. Bank Altitude Connect", issuer: "U.S. Bank", shortName: "Altitude Connect",
+    annualFee: 95, currency: "Points",
+    color: "#0C2340", gradient: "linear-gradient(135deg, #1A3D6B 0%, #0C2340 100%)",
+    categories: { travel: 5, gas: 4, groceries: 2, streaming: 2, dining: 2, online_shopping: 1, transit: 1, general: 1 },
+    note: "5x travel (via Real-Time Rewards), 4x gas/EV, 2x groceries, streaming, dining.",
+  },
   // ---- AMAZON ----
   {
     id: "amazon-prime-visa", name: "Amazon Prime Visa", issuer: "Chase", shortName: "Amazon Prime Visa",
@@ -158,6 +222,49 @@ const CARDS_DATABASE = [
     annualFee: 0, currency: "Daily Cash",
     color: "#F5F5F7", gradient: "linear-gradient(135deg, #F5F5F7 0%, #D2D2D7 100%)",
     categories: { online_shopping: 2, dining: 2, groceries: 2, gas: 2, transit: 2, streaming: 2, travel: 2, drugstores: 2, home_improvement: 2, general: 1 },
+  },
+  // ---- HOTEL & AIRLINE CO-BRANDS ----
+  {
+    id: "marriott-bonvoy-boundless", name: "Marriott Bonvoy Boundless", issuer: "Chase", shortName: "Bonvoy Boundless",
+    annualFee: 95, currency: "Marriott Bonvoy Points",
+    color: "#8B1A1A", gradient: "linear-gradient(135deg, #8B1A1A 0%, #5C0000 100%)",
+    categories: { hotels: 6, groceries: 3, gas: 3, dining: 2, travel: 2, flights: 2, streaming: 2, online_shopping: 2, transit: 2, general: 2 },
+    note: "6x at Marriott properties, 3x groceries & gas, 2x dining & everything else.",
+  },
+  {
+    id: "hilton-honors-surpass", name: "Hilton Honors Surpass", issuer: "American Express", shortName: "Hilton Surpass",
+    annualFee: 150, currency: "Hilton Honors Points",
+    color: "#003366", gradient: "linear-gradient(135deg, #003366 0%, #001A33 100%)",
+    categories: { hotels: 12, dining: 6, groceries: 6, gas: 6, flights: 3, travel: 3, streaming: 3, online_shopping: 3, transit: 3, general: 3 },
+    note: "12x at Hilton, 6x at restaurants, supermarkets, gas. 3x everything else.",
+  },
+  {
+    id: "delta-skymiles-gold", name: "Delta SkyMiles Gold", issuer: "American Express", shortName: "Delta Gold",
+    annualFee: 150, currency: "Delta SkyMiles",
+    color: "#003366", gradient: "linear-gradient(135deg, #C41230 0%, #003366 100%)",
+    categories: { flights: 2, dining: 2, groceries: 2, gas: 1, travel: 1, streaming: 1, online_shopping: 1, transit: 1, general: 1 },
+    note: "2x on Delta purchases, dining, and at U.S. supermarkets. Free checked bag on Delta flights.",
+  },
+  {
+    id: "united-explorer", name: "United Explorer Card", issuer: "Chase", shortName: "United Explorer",
+    annualFee: 95, currency: "United MileagePlus Miles",
+    color: "#002244", gradient: "linear-gradient(135deg, #002244 0%, #004488 100%)",
+    categories: { flights: 2, hotels: 2, dining: 2, gas: 1, groceries: 1, travel: 1, streaming: 1, online_shopping: 1, transit: 1, general: 1 },
+    note: "2x on United, hotels, dining, and eligible delivery. Free checked bag on United flights.",
+  },
+  {
+    id: "southwest-rapid-rewards-plus", name: "Southwest Rapid Rewards Plus", issuer: "Chase", shortName: "SW RR Plus",
+    annualFee: 69, currency: "Southwest Points",
+    color: "#304CB2", gradient: "linear-gradient(135deg, #304CB2 0%, #1A2A6C 100%)",
+    categories: { flights: 2, hotels: 2, transit: 2, gas: 1, groceries: 1, dining: 1, travel: 1, streaming: 1, online_shopping: 1, general: 1 },
+    note: "2x on Southwest, Rapid Rewards hotels, transit. Anniversary points bonus.",
+  },
+  {
+    id: "ihg-one-rewards-premier", name: "IHG One Rewards Premier", issuer: "Chase", shortName: "IHG Premier",
+    annualFee: 99, currency: "IHG Points",
+    color: "#006633", gradient: "linear-gradient(135deg, #006633 0%, #003D1F 100%)",
+    categories: { hotels: 10, gas: 5, dining: 5, groceries: 5, flights: 3, travel: 3, streaming: 3, online_shopping: 3, transit: 3, general: 3 },
+    note: "Up to 26x at IHG hotels, 5x gas/dining/groceries, 3x everything else. Annual free night.",
   },
 ];
 
@@ -177,10 +284,26 @@ const MC = {
   "home depot":"home_improvement","lowes":"home_improvement","lowe's":"home_improvement","ace hardware":"home_improvement","menards":"home_improvement",
   "hertz":"car_rental","avis":"car_rental","enterprise":"car_rental","turo":"car_rental","national":"car_rental","budget":"car_rental",
   "kayak":"travel","google flights":"travel","tripadvisor":"travel","priceline":"travel","hopper":"travel",
+  // Entertainment
+  "amc":"entertainment","regal":"entertainment","cinemark":"entertainment","ticketmaster":"entertainment","stubhub":"entertainment","seatgeek":"entertainment","topgolf":"entertainment","dave and busters":"entertainment","bowlero":"entertainment",
+  // Phone plans
+  "verizon":"phone_plans","t-mobile":"phone_plans","at&t":"phone_plans","att":"phone_plans","mint mobile":"phone_plans","google fi":"phone_plans",
+  // Fitness
+  "planet fitness":"fitness","equinox":"fitness","orangetheory":"fitness","peloton":"fitness","la fitness":"fitness","crunch fitness":"fitness",
+  // Additional dining
+  "crumbl":"dining","dunkin":"dining","dunkin donuts":"dining",
+  // Additional gas
+  "marathon":"gas","circle k":"gas","7-eleven":"gas","quiktrip":"gas","ev charging":"gas","chargepoint":"gas","electrify america":"gas",
+  // Additional online shopping
+  "shein":"online_shopping","temu":"online_shopping",
+  // Shipping
+  "ups":"shipping","fedex":"shipping","usps":"shipping",
+  // Additional groceries
+  "shoprite":"groceries","winn-dixie":"groceries","amazon fresh":"groceries",
 };
 
-const CATEGORY_LABELS = { dining:"Dining",groceries:"Groceries",flights:"Flights",hotels:"Hotels",gas:"Gas",transit:"Transit & Rideshare",streaming:"Streaming",online_shopping:"Online Shopping",drugstores:"Drugstores",home_improvement:"Home Improvement",car_rental:"Car Rental",travel:"Travel",entertainment:"Entertainment",general:"Everything Else" };
-const CATEGORY_ICONS = { dining:"🍽️",groceries:"🛒",flights:"✈️",hotels:"🏨",gas:"⛽",transit:"🚗",streaming:"📺",online_shopping:"🛍️",drugstores:"💊",home_improvement:"🔨",car_rental:"🚙",travel:"🌍",entertainment:"🎭",general:"💳" };
+const CATEGORY_LABELS = { dining:"Dining",groceries:"Groceries",flights:"Flights",hotels:"Hotels",gas:"Gas",transit:"Transit & Rideshare",streaming:"Streaming",online_shopping:"Online Shopping",drugstores:"Drugstores",home_improvement:"Home Improvement",car_rental:"Car Rental",travel:"Travel",entertainment:"Entertainment",phone_plans:"Phone Plans",fitness:"Fitness",shipping:"Shipping",general:"Everything Else" };
+const CATEGORY_ICONS = { dining:"🍽️",groceries:"🛒",flights:"✈️",hotels:"🏨",gas:"⛽",transit:"🚗",streaming:"📺",online_shopping:"🛍️",drugstores:"💊",home_improvement:"🔨",car_rental:"🚙",travel:"🌍",entertainment:"🎭",phone_plans:"📱",fitness:"🏋️",shipping:"📦",general:"💳" };
 
 // ============================================
 // CONFETTI
@@ -593,7 +716,7 @@ export default function CardAdvisor() {
             {/* Card search */}
             <div style={{ position:"relative",marginBottom:"16px" }}>
               <div style={{ position:"absolute",left:"14px",top:"50%",transform:"translateY(-50%)",fontSize:"14px",opacity:0.4,pointerEvents:"none" }}>🔍</div>
-              <input type="text" placeholder="Search 25 cards..." value={search} onChange={e => setSearch(e.target.value)}
+              <input type="text" placeholder="Search 39 cards..." value={search} onChange={e => setSearch(e.target.value)}
                 style={{ width:"100%",padding:"12px 14px 12px 40px",border:"1.5px solid rgba(255,255,255,0.06)",borderRadius:"12px",
                   backgroundColor:"rgba(255,255,255,0.03)",fontFamily:"'Outfit',sans-serif",fontSize:"13px",color:"#FFF",outline:"none" }} />
             </div>
@@ -702,7 +825,7 @@ export default function CardAdvisor() {
                     <div style={{ fontSize:"10px",fontWeight:700,letterSpacing:"0.15em",textTransform:"uppercase",
                       color:"rgba(255,255,255,0.2)",marginBottom:"12px",fontFamily:"'Syne',sans-serif" }}>Popular categories</div>
                     <div style={{ display:"flex",flexWrap:"wrap",gap:"8px" }}>
-                      {Object.entries(CATEGORY_LABELS).filter(([k]) => k!=="general" && k!=="entertainment").map(([k, v]) => (
+                      {Object.entries(CATEGORY_LABELS).filter(([k]) => k!=="general").map(([k, v]) => (
                         <button key={k} onClick={() => setInput(v)}
                           style={{ padding:"8px 14px",border:"1.5px solid rgba(255,255,255,0.06)",borderRadius:"20px",
                             backgroundColor:"rgba(255,255,255,0.02)",fontFamily:"'Outfit',sans-serif",fontSize:"12px",fontWeight:500,
@@ -722,7 +845,7 @@ export default function CardAdvisor() {
       </div>
 
       <div style={{ textAlign:"center",padding:"32px 20px",fontSize:"11px",color:"rgba(255,255,255,0.12)",marginTop:"40px" }}>
-        CardAdvisor · 25 cards · Not financial advice · Rates as of Feb 2026
+        CardAdvisor · 39 cards · Not financial advice · Rates as of Feb 2026
       </div>
     </div>
   );
