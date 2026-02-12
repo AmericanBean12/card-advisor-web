@@ -266,6 +266,85 @@ const CARDS_DATABASE = [
     categories: { hotels: 10, gas: 5, dining: 5, groceries: 5, flights: 3, travel: 3, streaming: 3, online_shopping: 3, transit: 3, general: 3 },
     note: "Up to 26x at IHG hotels, 5x gas/dining/groceries, 3x everything else. Annual free night.",
   },
+  {
+    id: "world-of-hyatt", name: "World of Hyatt Credit Card", issuer: "Chase", shortName: "World of Hyatt",
+    annualFee: 95, currency: "World of Hyatt Points",
+    color: "#6B2D5B", gradient: "linear-gradient(135deg, #6B2D5B 0%, #3D1A35 100%)",
+    categories: { hotels: 4, dining: 2, flights: 2, gas: 1, groceries: 1, travel: 1, streaming: 1, online_shopping: 1, transit: 1, general: 1 },
+    note: "4x at Hyatt, 2x dining, 2x flights, 1x everything else. Annual free night up to Cat 4.",
+  },
+  {
+    id: "hilton-honors-no-fee", name: "Hilton Honors Card", issuer: "American Express", shortName: "Hilton No-Fee",
+    annualFee: 0, currency: "Hilton Honors Points",
+    color: "#003366", gradient: "linear-gradient(135deg, #4A8CC7 0%, #003366 100%)",
+    categories: { hotels: 7, dining: 5, groceries: 5, gas: 5, flights: 3, travel: 3, streaming: 3, online_shopping: 3, transit: 3, general: 3 },
+    note: "7x at Hilton, 5x dining/groceries/gas, 3x everything else. No annual fee.",
+  },
+  {
+    id: "alaska-airlines-visa", name: "Alaska Airlines Visa Signature", issuer: "Bank of America", shortName: "Alaska Airlines",
+    annualFee: 95, currency: "Alaska Mileage Plan Miles",
+    color: "#00274C", gradient: "linear-gradient(135deg, #00274C 0%, #004D40 100%)",
+    categories: { flights: 3, hotels: 2, dining: 2, gas: 1, groceries: 1, travel: 1, streaming: 1, online_shopping: 1, transit: 1, general: 1 },
+    note: "3x on Alaska purchases, 2x on dining, transit, eligible streaming. Companion Fare from $99.",
+  },
+  // ---- BILT ----
+  {
+    id: "bilt-blue", name: "Bilt Blue Card", issuer: "Bilt Rewards", shortName: "Bilt Blue",
+    annualFee: 0, currency: "Bilt Points",
+    color: "#1E3A5F", gradient: "linear-gradient(135deg, #1E3A5F 0%, #0F1F33 100%)",
+    categories: { dining: 1, groceries: 1, gas: 1, travel: 1, flights: 1, hotels: 1, streaming: 1, online_shopping: 1, transit: 1, general: 1 },
+    note: "1x on all purchases + earn points on rent/mortgage with no transaction fee. 4% Bilt Cash on everyday spend.",
+  },
+  {
+    id: "bilt-obsidian", name: "Bilt Obsidian Card", issuer: "Bilt Rewards", shortName: "Bilt Obsidian",
+    annualFee: 95, currency: "Bilt Points",
+    color: "#2D2D2D", gradient: "linear-gradient(135deg, #2D2D2D 0%, #0A0A0A 100%)",
+    categories: { dining: 3, groceries: 3, travel: 2, flights: 2, hotels: 2, gas: 1, streaming: 1, online_shopping: 1, transit: 1, general: 1 },
+    note: "3x on dining OR grocery (choose annually, grocery up to $25K/yr), 2x travel, 1x everything else. Points on rent/mortgage.",
+  },
+  {
+    id: "bilt-palladium", name: "Bilt Palladium Card", issuer: "Bilt Rewards", shortName: "Bilt Palladium",
+    annualFee: 495, currency: "Bilt Points",
+    color: "#4A4A4A", gradient: "linear-gradient(135deg, #8C8C8C 0%, #3D3D3D 50%, #4A4A4A 100%)",
+    categories: { dining: 2, groceries: 2, gas: 2, travel: 2, flights: 2, hotels: 2, streaming: 2, online_shopping: 2, transit: 2, drugstores: 2, home_improvement: 2, general: 2 },
+    note: "2x on all purchases. Points on rent/mortgage. Priority Pass, $300 Bilt Travel Hotel credits. TPG values Bilt points at 2.2cpp.",
+  },
+  // ---- ADDITIONAL CARDS ----
+  {
+    id: "costco-anywhere-visa", name: "Costco Anywhere Visa", issuer: "Citi", shortName: "Costco Visa",
+    annualFee: 0, currency: "Cash Back",
+    color: "#E31837", gradient: "linear-gradient(135deg, #E31837 0%, #005DAA 100%)",
+    categories: { gas: 4, dining: 3, travel: 3, groceries: 2, flights: 2, hotels: 2, online_shopping: 1, streaming: 1, transit: 1, general: 1 },
+    note: "4% gas (up to $7K/yr), 3% dining & travel, 2% Costco, 1% everything else. Requires Costco membership.",
+  },
+  {
+    id: "usbank-altitude-reserve", name: "U.S. Bank Altitude Reserve", issuer: "U.S. Bank", shortName: "Altitude Reserve",
+    annualFee: 400, currency: "Points",
+    color: "#0C2340", gradient: "linear-gradient(135deg, #2D5F8A 0%, #0C2340 100%)",
+    categories: { travel: 3, dining: 3, gas: 1, groceries: 1, streaming: 1, online_shopping: 1, transit: 1, flights: 1, hotels: 1, general: 1 },
+    note: "3x on travel and dining via mobile wallet, 1x everything else. $325 annual travel credit.",
+  },
+  {
+    id: "citi-strata", name: "Citi Strata Card", issuer: "Citi", shortName: "Citi Strata",
+    annualFee: 0, currency: "ThankYou Points",
+    color: "#004B87", gradient: "linear-gradient(135deg, #3A7FCA 0%, #004B87 100%)",
+    categories: { hotels: 5, gas: 3, groceries: 3, transit: 3, streaming: 3, general: 1 },
+    note: "5x hotels/car/attractions via Citi Travel, 3x gas, groceries, transit, self-select category. No annual fee.",
+  },
+  {
+    id: "venture-one", name: "Capital One VentureOne", issuer: "Capital One", shortName: "VentureOne",
+    annualFee: 0, currency: "Capital One Miles",
+    color: "#555", gradient: "linear-gradient(135deg, #777 0%, #444 100%)",
+    categories: { hotels: 5, flights: 5, car_rental: 5, dining: 1.25, groceries: 1.25, gas: 1.25, travel: 1.25, streaming: 1.25, online_shopping: 1.25, transit: 1.25, general: 1.25 },
+    note: "1.25x on everything, 5x on hotels/flights via Capital One Travel. No annual fee.",
+  },
+  {
+    id: "amex-everyday-preferred", name: "Amex EveryDay Preferred", issuer: "American Express", shortName: "EveryDay Pref.",
+    annualFee: 95, currency: "Membership Rewards",
+    color: "#006FCF", gradient: "linear-gradient(135deg, #006FCF 0%, #004A99 100%)",
+    categories: { groceries: 3, gas: 2, dining: 1, travel: 1, flights: 1, hotels: 1, streaming: 1, online_shopping: 1, transit: 1, general: 1 },
+    note: "3x at U.S. supermarkets (up to $6K/yr), 2x at gas stations. 50% bonus when you make 30+ purchases/mo.",
+  },
 ];
 
 // ============================================
@@ -300,6 +379,8 @@ const MC = {
   "ups":"shipping","fedex":"shipping","usps":"shipping",
   // Additional groceries
   "shoprite":"groceries","winn-dixie":"groceries","amazon fresh":"groceries",
+  // Rent & mortgage
+  "rent":"general","mortgage":"general",
 };
 
 const CATEGORY_LABELS = { dining:"Dining",groceries:"Groceries",flights:"Flights",hotels:"Hotels",gas:"Gas",transit:"Transit & Rideshare",streaming:"Streaming",online_shopping:"Online Shopping",drugstores:"Drugstores",home_improvement:"Home Improvement",car_rental:"Car Rental",travel:"Travel",entertainment:"Entertainment",phone_plans:"Phone Plans",fitness:"Fitness",shipping:"Shipping",general:"Everything Else" };
@@ -716,7 +797,7 @@ export default function CardAdvisor() {
             {/* Card search */}
             <div style={{ position:"relative",marginBottom:"16px" }}>
               <div style={{ position:"absolute",left:"14px",top:"50%",transform:"translateY(-50%)",fontSize:"14px",opacity:0.4,pointerEvents:"none" }}>🔍</div>
-              <input type="text" placeholder="Search 39 cards..." value={search} onChange={e => setSearch(e.target.value)}
+              <input type="text" placeholder={`Search ${CARDS_DATABASE.length} cards...`} value={search} onChange={e => setSearch(e.target.value)}
                 style={{ width:"100%",padding:"12px 14px 12px 40px",border:"1.5px solid rgba(255,255,255,0.06)",borderRadius:"12px",
                   backgroundColor:"rgba(255,255,255,0.03)",fontFamily:"'Outfit',sans-serif",fontSize:"13px",color:"#FFF",outline:"none" }} />
             </div>
@@ -845,7 +926,7 @@ export default function CardAdvisor() {
       </div>
 
       <div style={{ textAlign:"center",padding:"32px 20px",fontSize:"11px",color:"rgba(255,255,255,0.12)",marginTop:"40px" }}>
-        CardAdvisor · 39 cards · Not financial advice · Rates as of Feb 2026
+        {`CardAdvisor · ${CARDS_DATABASE.length} cards · Not financial advice · Rates as of Feb 2026`}
       </div>
     </div>
   );
