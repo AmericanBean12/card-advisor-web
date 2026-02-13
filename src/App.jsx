@@ -528,6 +528,7 @@ export default function CardAdvisor() {
   const [lookups, setLookups] = useState(0);
   const [totalSaved, setTotalSaved] = useState(0);
   const [search, setSearch] = useState("");
+  const [showAllCats, setShowAllCats] = useState(false);
   const ref = useRef(null);
 
   // Auth state
@@ -753,6 +754,29 @@ export default function CardAdvisor() {
     return ((diff / ranked[ranked.length-1].rate) * 100).toFixed(0);
   }, [ranked]);
 
+  const optScore = useMemo(() => {
+    const cats = ["dining","groceries","flights","hotels","gas","transit","streaming","online_shopping","drugstores","home_improvement"];
+    if (sel.length === 0) return { score: 0, label: "Needs Work", pct: "Top 80%" };
+    let total = 0;
+    cats.forEach(cat => {
+      let best = 0;
+      sel.forEach(id => {
+        const card = CARDS_DATABASE.find(c => c.id === id);
+        if (card) best = Math.max(best, card.categories[cat] || card.categories.general || 1);
+      });
+      if (best >= 5) total += 10;
+      else if (best >= 3) total += 8;
+      else if (best >= 2) total += 5;
+    });
+    let label, pct;
+    if (total <= 30) { label = "Needs Work"; pct = "Top 80%"; }
+    else if (total <= 50) { label = "Building"; pct = "Top 60%"; }
+    else if (total <= 70) { label = "Good"; pct = "Top 35%"; }
+    else if (total <= 85) { label = "Great"; pct = "Top 15%"; }
+    else { label = "Excellent"; pct = "Top 5%"; }
+    return { score: total, label, pct };
+  }, [sel]);
+
   const issuers = [...new Set(CARDS_DATABASE.map(c => c.issuer))];
   const filteredCards = search.trim()
     ? CARDS_DATABASE.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.issuer.toLowerCase().includes(search.toLowerCase()))
@@ -772,6 +796,8 @@ export default function CardAdvisor() {
         *{box-sizing:border-box;margin:0;padding:0}
         input::placeholder{color:rgba(255,255,255,0.25)}
         ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
+        @media(min-width:600px){.cat-grid{grid-template-columns:repeat(6,1fr)!important}}
+        .wallet-scroll::-webkit-scrollbar{display:none}
       `}</style>
 
       {/* BG glow */}
@@ -881,6 +907,27 @@ export default function CardAdvisor() {
               </div>
             ) : (
               <>
+                {/* Section A: Optimization Score + Active Streak */}
+                <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:"20px",paddingBottom:"20px",borderBottom:"1px solid rgba(255,255,255,0.06)",marginBottom:"20px" }}>
+                  <div style={{ flex:1,minWidth:"200px" }}>
+                    <div style={{ fontFamily:"'Syne',sans-serif",fontSize:"10px",fontWeight:700,letterSpacing:"0.15em",textTransform:"uppercase",color:"rgba(255,255,255,0.25)",marginBottom:"8px" }}>Optimization Score</div>
+                    <div style={{ display:"flex",alignItems:"baseline",gap:"2px" }}>
+                      <span style={{ fontFamily:"'Syne',sans-serif",fontSize:"42px",fontWeight:800,color:"#00DC82",lineHeight:1 }}>{optScore.score}</span>
+                      <span style={{ fontFamily:"'Syne',sans-serif",fontSize:"18px",fontWeight:600,color:"rgba(255,255,255,0.25)" }}>/100</span>
+                    </div>
+                    <div style={{ marginTop:"4px" }}>
+                      <span style={{ fontFamily:"'Syne',sans-serif",fontSize:"13px",fontWeight:600,color:"rgba(255,255,255,0.6)" }}>{optScore.label}</span>
+                      <span style={{ fontFamily:"'Syne',sans-serif",fontSize:"13px",color:"rgba(255,255,255,0.3)" }}>{" "}· {optScore.pct}</span>
+                    </div>
+                  </div>
+                  <div style={{ textAlign:"right" }}>
+                    <div style={{ fontFamily:"'Syne',sans-serif",fontSize:"10px",fontWeight:700,letterSpacing:"0.15em",textTransform:"uppercase",color:"rgba(255,255,255,0.25)",marginBottom:"8px" }}>Active Streak</div>
+                    <div style={{ fontFamily:"'Syne',sans-serif",fontSize:"20px",fontWeight:800,color:"#FFF" }}>0 Days</div>
+                    <div style={{ fontSize:"12px",color:"rgba(255,255,255,0.3)",marginTop:"4px" }}>Keep optimizing!</div>
+                  </div>
+                </div>
+
+                {/* Section B: Stats Bar */}
                 {(lookups > 0) && (
                   <div style={{ display:"flex",justifyContent:"center",gap:"24px",marginBottom:"20px",animation:"fUp 0.3s ease" }}>
                     <div style={{ textAlign:"center" }}>
@@ -899,21 +946,23 @@ export default function CardAdvisor() {
                     </div>
                   </div>
                 )}
-                <div style={{ position:"relative",marginBottom:"20px" }}>
+
+                {/* Section C: Search Bar */}
+                <div style={{ position:"relative",marginBottom:"20px",padding:"16px",borderRadius:"16px",backgroundColor:"rgba(0,220,130,0.03)",border:"1.5px solid rgba(0,220,130,0.12)" }}>
                   <div style={{ display:"flex",gap:"10px",alignItems:"center" }}>
                     <div style={{ position:"relative",flex:1 }}>
-                      <div style={{ position:"absolute",left:"16px",top:"50%",transform:"translateY(-50%)",fontSize:"16px",opacity:0.4,pointerEvents:"none" }}>🔍</div>
+                      <div style={{ position:"absolute",left:"16px",top:"50%",transform:"translateY(-50%)",fontSize:"18px",opacity:0.4,pointerEvents:"none" }}>🔍</div>
                       <input ref={ref} type="text" placeholder="Where are you spending?" value={input}
                         onChange={e => { setInput(e.target.value); setLastTop(null); }}
                         onKeyDown={e => { if (e.key === "Enter") handleSearch(); }}
-                        style={{ width:"100%",padding:"16px 18px 16px 44px",border:"2px solid rgba(255,255,255,0.06)",borderRadius:"14px",
-                          backgroundColor:"rgba(255,255,255,0.03)",fontFamily:"'Outfit',sans-serif",fontSize:"15px",fontWeight:500,color:"#FFF",outline:"none",
+                        style={{ width:"100%",padding:"18px 20px 18px 48px",border:"2px solid rgba(255,255,255,0.06)",borderRadius:"14px",
+                          backgroundColor:"rgba(255,255,255,0.03)",fontFamily:"'Outfit',sans-serif",fontSize:"16px",fontWeight:500,color:"#FFF",outline:"none",
                           transition:"all 0.2s ease" }}
                         onFocus={e => { e.target.style.borderColor="rgba(0,220,130,0.4)"; e.target.style.backgroundColor="rgba(0,220,130,0.03)"; }}
                         onBlur={e => { e.target.style.borderColor="rgba(255,255,255,0.06)"; e.target.style.backgroundColor="rgba(255,255,255,0.03)"; }} />
                     </div>
                     <button onClick={handleSearch} disabled={!input.trim() || aiLoading}
-                      style={{ padding:"16px 20px",border:"none",borderRadius:"14px",
+                      style={{ padding:"18px 20px",border:"none",borderRadius:"14px",
                         background: !input.trim() || aiLoading ? "rgba(255,255,255,0.06)" : "linear-gradient(135deg,#00DC82 0%,#00C974 100%)",
                         color: !input.trim() || aiLoading ? "rgba(255,255,255,0.25)" : "#0A0F1A",
                         fontFamily:"'Syne',sans-serif",fontSize:"13px",fontWeight:700,cursor: !input.trim() || aiLoading ? "default" : "pointer",
@@ -940,6 +989,7 @@ export default function CardAdvisor() {
                   )}
                 </div>
 
+                {/* Section E: Search Results */}
                 {aiLoading && input.trim() && (
                   <div style={{ display:"inline-flex",alignItems:"center",gap:"6px",padding:"6px 14px",borderRadius:"20px",
                     backgroundColor:"rgba(0,220,130,0.06)",border:"1px solid rgba(0,220,130,0.15)",fontSize:"12px",fontWeight:600,
@@ -979,21 +1029,71 @@ export default function CardAdvisor() {
                   </div>
                 )}
 
+                {/* Section D: Quick Categories */}
                 {!input.trim() && (
                   <div style={{ marginTop:"4px" }}>
                     <div style={{ fontSize:"10px",fontWeight:700,letterSpacing:"0.15em",textTransform:"uppercase",
-                      color:"rgba(255,255,255,0.2)",marginBottom:"12px",fontFamily:"'Syne',sans-serif" }}>Popular categories</div>
-                    <div style={{ display:"flex",flexWrap:"wrap",gap:"8px" }}>
-                      {Object.entries(CATEGORY_LABELS).filter(([k]) => k!=="general").map(([k, v]) => (
-                        <button key={k} onClick={() => setInput(v)}
-                          style={{ padding:"8px 14px",border:"1.5px solid rgba(255,255,255,0.06)",borderRadius:"20px",
-                            backgroundColor:"rgba(255,255,255,0.02)",fontFamily:"'Outfit',sans-serif",fontSize:"12px",fontWeight:500,
-                            color:"rgba(255,255,255,0.45)",cursor:"pointer",transition:"all 0.2s ease",display:"flex",alignItems:"center",gap:"6px" }}
-                          onMouseEnter={e => { e.currentTarget.style.backgroundColor="rgba(0,220,130,0.08)"; e.currentTarget.style.color="#00DC82"; e.currentTarget.style.borderColor="rgba(0,220,130,0.2)"; }}
-                          onMouseLeave={e => { e.currentTarget.style.backgroundColor="rgba(255,255,255,0.02)"; e.currentTarget.style.color="rgba(255,255,255,0.45)"; e.currentTarget.style.borderColor="rgba(255,255,255,0.06)"; }}>
-                          <span style={{ fontSize:"13px" }}>{CATEGORY_ICONS[k]}</span>{v}
-                        </button>
-                      ))}
+                      color:"rgba(255,255,255,0.2)",marginBottom:"12px",fontFamily:"'Syne',sans-serif" }}>Quick Categories</div>
+                    <div className="cat-grid" style={{ display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"10px" }}>
+                      {(() => {
+                        const defaultCats = ["dining","groceries","gas","travel","hotels","streaming"];
+                        const allCats = Object.entries(CATEGORY_LABELS).filter(([k]) => k !== "general").map(([k]) => k);
+                        const catsToShow = showAllCats ? allCats : defaultCats;
+                        return (
+                          <>
+                            {catsToShow.map(k => (
+                              <button key={k} onClick={() => setInput(CATEGORY_LABELS[k])}
+                                style={{ padding:"16px 8px",borderRadius:"12px",border:"1.5px solid rgba(255,255,255,0.06)",
+                                  backgroundColor:"rgba(255,255,255,0.02)",textAlign:"center",cursor:"pointer",
+                                  transition:"all 0.2s ease" }}
+                                onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(0,220,130,0.3)"; e.currentTarget.style.backgroundColor="rgba(0,220,130,0.06)"; }}
+                                onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(255,255,255,0.06)"; e.currentTarget.style.backgroundColor="rgba(255,255,255,0.02)"; }}>
+                                <span style={{ fontSize:"24px",display:"block",marginBottom:"6px" }}>{CATEGORY_ICONS[k]}</span>
+                                <span style={{ fontSize:"11px",fontFamily:"'Outfit',sans-serif",color:"rgba(255,255,255,0.45)" }}>{CATEGORY_LABELS[k]}</span>
+                              </button>
+                            ))}
+                            <button onClick={() => setShowAllCats(!showAllCats)}
+                              style={{ padding:"16px 8px",borderRadius:"12px",border:"1.5px solid rgba(255,255,255,0.06)",
+                                backgroundColor:"rgba(255,255,255,0.02)",textAlign:"center",cursor:"pointer",
+                                transition:"all 0.2s ease" }}
+                              onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(0,220,130,0.3)"; e.currentTarget.style.backgroundColor="rgba(0,220,130,0.06)"; }}
+                              onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(255,255,255,0.06)"; e.currentTarget.style.backgroundColor="rgba(255,255,255,0.02)"; }}>
+                              <span style={{ fontSize:"24px",display:"block",marginBottom:"6px" }}>{showAllCats ? "⬆️" : "···"}</span>
+                              <span style={{ fontSize:"11px",fontFamily:"'Outfit',sans-serif",color:"rgba(255,255,255,0.45)" }}>{showAllCats ? "Less" : "More"}</span>
+                            </button>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                )}
+
+                {/* Section F: Active Wallet Preview */}
+                {!input.trim() && (
+                  <div style={{ marginTop:"32px" }}>
+                    <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"12px" }}>
+                      <div style={{ fontFamily:"'Syne',sans-serif",fontSize:"10px",fontWeight:700,letterSpacing:"0.15em",textTransform:"uppercase",color:"rgba(255,255,255,0.25)" }}>Active Wallet</div>
+                      <button onClick={() => setView("wallet")}
+                        style={{ background:"none",border:"none",fontFamily:"'Syne',sans-serif",fontSize:"11px",fontWeight:700,color:"#00DC82",cursor:"pointer",padding:0 }}>
+                        Manage Wallet →
+                      </button>
+                    </div>
+                    <div className="wallet-scroll" style={{ display:"flex",gap:"14px",overflowX:"auto",paddingBottom:"8px" }}>
+                      {sel.map(id => {
+                        const card = CARDS_DATABASE.find(c => c.id === id);
+                        if (!card) return null;
+                        const isLight = card.id === "apple-card";
+                        return (
+                          <div key={card.id} style={{ width:"280px",minWidth:"280px",height:"160px",borderRadius:"14px",background:card.gradient,
+                            padding:"20px",position:"relative",transition:"transform 0.2s ease",cursor:"default" }}
+                            onMouseEnter={e => e.currentTarget.style.transform="translateY(-4px)"}
+                            onMouseLeave={e => e.currentTarget.style.transform="translateY(0)"}>
+                            <div style={{ fontFamily:"'Syne',sans-serif",fontSize:"16px",fontWeight:700,color:isLight?"#1A1A1A":"#FFF" }}>{card.shortName}</div>
+                            <div style={{ fontSize:"10px",letterSpacing:"0.15em",color:isLight?"rgba(26,26,26,0.5)":"rgba(255,255,255,0.5)",marginTop:"4px" }}>{card.currency.toUpperCase()}</div>
+                            <div style={{ position:"absolute",bottom:"20px",right:"20px",fontSize:"11px",color:isLight?"rgba(26,26,26,0.4)":"rgba(255,255,255,0.4)" }}>{card.issuer}</div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
