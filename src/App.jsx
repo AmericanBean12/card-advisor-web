@@ -648,16 +648,36 @@ export default function CardAdvisor() {
 
   const toggle = (id) => setSel(p => p.includes(id) ? p.filter(c => c !== id) : [...p, id]);
 
-  const resolveCat = useCallback((i) => {
+  const resolveCat = useCallback(async (i) => {
     const l = i.toLowerCase().trim();
     if (!l) return null;
     if (MC[l]) return MC[l];
     for (const [m, c] of Object.entries(MC)) { if (l.includes(m) || m.includes(l)) return c; }
     for (const [k, v] of Object.entries(CATEGORY_LABELS)) { if (l === k || l === v.toLowerCase()) return k; }
-    return "general";
+    try {
+      const res = await fetch('https://fksmaxeyturvoywglvuq.supabase.co/functions/v1/categorize-merchant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ merchant: i }),
+      });
+      const data = await res.json();
+      return data.category || "general";
+    } catch {
+      return "general";
+    }
   }, []);
 
-  const cat = resolveCat(input);
+  const [cat, setCat] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const resolve = async () => {
+      const result = await resolveCat(input);
+      if (!cancelled) setCat(result);
+    };
+    resolve();
+    return () => { cancelled = true; };
+  }, [input, resolveCat]);
 
   const ranked = useMemo(() => {
     if (!cat || sel.length === 0) return [];
