@@ -797,7 +797,7 @@ export default function CardAdvisor() {
         *{box-sizing:border-box;margin:0;padding:0}
         input::placeholder{color:rgba(255,255,255,0.25)}
         ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
-        @media(min-width:600px){.cat-grid{grid-template-columns:repeat(auto-fit,minmax(100px,1fr))!important}}
+        @media(max-width:640px){.cat-grid{grid-template-columns:repeat(3,1fr)!important}}
         .wallet-scroll::-webkit-scrollbar{display:none}
         .search-glow{position:absolute;inset:-2px;border-radius:18px;background:linear-gradient(135deg,rgba(0,220,130,0.3),rgba(59,130,246,0.3));filter:blur(20px);opacity:0.5;pointer-events:none;transition:opacity 0.3s ease;z-index:0}
       `}</style>
@@ -812,7 +812,7 @@ export default function CardAdvisor() {
 
       {/* Nav Bar */}
       <div style={{ position:"sticky",top:0,zIndex:20,backdropFilter:"blur(10px)",WebkitBackdropFilter:"blur(10px)",backgroundColor:"rgba(10,15,26,0.8)",borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 40px",maxWidth:"720px",margin:"0 auto" }}>
+        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 40px" }}>
           <div style={{ display:"inline-flex",alignItems:"center",gap:"0px" }}>
             <span style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"13px",fontWeight:700,letterSpacing:"0.15em",color:"#FFF" }}>CARD</span>
             <span style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"13px",fontWeight:700,letterSpacing:"0.15em",color:"#00DC82" }}>ADVISOR</span>
@@ -848,7 +848,7 @@ export default function CardAdvisor() {
       </div>
 
       {/* Content */}
-      <div style={{ padding:"32px 20px 20px",maxWidth:"720px",margin:"0 auto",position:"relative",zIndex:1 }}>
+      <div style={{ padding:"32px 20px 20px",maxWidth:"960px",margin:"0 auto",position:"relative",zIndex:1 }}>
 
         {/* WALLET */}
         {view === "wallet" && (
@@ -1021,14 +1021,16 @@ export default function CardAdvisor() {
                   <div style={{ marginTop:"4px" }}>
                     <div style={{ fontSize:"10px",fontWeight:700,letterSpacing:"0.15em",textTransform:"uppercase",
                       color:"rgba(255,255,255,0.2)",marginBottom:"12px",fontFamily:"'Space Grotesk',sans-serif" }}>Quick Categories</div>
-                    <div className="cat-grid" style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(100px,1fr))",gap:"10px" }}>
+                    <div className="cat-grid" style={{ display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:"10px" }}>
                       {(() => {
-                        const defaultCats = ["dining","groceries","gas","travel","hotels","streaming"];
-                        const allCats = Object.entries(CATEGORY_LABELS).filter(([k]) => k !== "general").map(([k]) => k);
-                        const catsToShow = showAllCats ? allCats : defaultCats;
+                        const ORDERED_CATS = ["dining","groceries","gas","travel","hotels","online_shopping",
+                          "flights","streaming","transit","drugstores","home_improvement","entertainment",
+                          "car_rental","phone_plans","fitness","shipping"];
+                        const defaultCats = ORDERED_CATS.slice(0, 6);
+                        const extraCats = ORDERED_CATS.slice(6);
                         return (
                           <>
-                            {catsToShow.map(k => (
+                            {defaultCats.map(k => (
                               <button key={k} onClick={() => setInput(CATEGORY_LABELS[k])}
                                 style={{ height:"96px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
                                   padding:"16px",borderRadius:"12px",border:"1px solid rgba(75,85,99,0.5)",
@@ -1050,6 +1052,18 @@ export default function CardAdvisor() {
                               <span className="cat-icon" style={{ fontSize:"30px",display:"block",marginBottom:"6px",filter:"grayscale(0.5)",transition:"filter 0.3s ease" }}>{showAllCats ? "⬆️" : "···"}</span>
                               <span style={{ fontSize:"13px",fontFamily:"'Inter',sans-serif",color:"rgba(255,255,255,0.45)" }}>{showAllCats ? "Less" : "More"}</span>
                             </button>
+                            {showAllCats && extraCats.map(k => (
+                              <button key={k} onClick={() => setInput(CATEGORY_LABELS[k])}
+                                style={{ height:"96px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+                                  padding:"16px",borderRadius:"12px",border:"1px solid rgba(75,85,99,0.5)",
+                                  backgroundColor:"rgba(31,41,55,0.4)",textAlign:"center",cursor:"pointer",
+                                  transition:"all 0.3s ease" }}
+                                onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(0,220,130,0.5)"; e.currentTarget.style.backgroundColor="rgba(31,41,55,0.6)"; e.currentTarget.querySelector('.cat-icon').style.filter="grayscale(0)"; }}
+                                onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(75,85,99,0.5)"; e.currentTarget.style.backgroundColor="rgba(31,41,55,0.4)"; e.currentTarget.querySelector('.cat-icon').style.filter="grayscale(0.5)"; }}>
+                                <span className="cat-icon" style={{ fontSize:"30px",display:"block",marginBottom:"6px",filter:"grayscale(0.5)",transition:"filter 0.3s ease" }}>{CATEGORY_ICONS[k]}</span>
+                                <span style={{ fontSize:"13px",fontFamily:"'Inter',sans-serif",color:"rgba(255,255,255,0.45)" }}>{CATEGORY_LABELS[k]}</span>
+                              </button>
+                            ))}
                           </>
                         );
                       })()}
