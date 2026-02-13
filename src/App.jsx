@@ -799,7 +799,7 @@ export default function CardAdvisor() {
         ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
         @media(min-width:600px){.cat-grid{grid-template-columns:repeat(6,1fr)!important}}
         .wallet-scroll::-webkit-scrollbar{display:none}
-        .search-glow{position:absolute;inset:-2px;border-radius:18px;background:linear-gradient(135deg,rgba(0,220,130,0.3),rgba(59,130,246,0.3));filter:blur(15px);opacity:0.4;pointer-events:none;transition:opacity 0.3s ease;z-index:0}
+        .search-glow{position:absolute;inset:-2px;border-radius:18px;background:linear-gradient(135deg,rgba(0,220,130,0.3),rgba(59,130,246,0.3));filter:blur(20px);opacity:0.5;pointer-events:none;transition:opacity 0.3s ease;z-index:0}
       `}</style>
 
       {/* BG glow */}
@@ -847,16 +847,8 @@ export default function CardAdvisor() {
         </div>
       </div>
 
-      {/* Header */}
-      <div style={{ padding:"24px 20px 16px",textAlign:"center",position:"relative",zIndex:1 }}>
-        <h1 style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"26px",fontWeight:800,letterSpacing:"-0.03em",lineHeight:1.15,
-          background:"linear-gradient(135deg,#FFF 0%,rgba(255,255,255,0.6) 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent" }}>
-          Maximize every purchase.
-        </h1>
-      </div>
-
       {/* Content */}
-      <div style={{ padding:"20px",maxWidth:"520px",margin:"0 auto",position:"relative",zIndex:1 }}>
+      <div style={{ padding:"32px 20px 20px",maxWidth:"520px",margin:"0 auto",position:"relative",zIndex:1 }}>
 
         {/* WALLET */}
         {view === "wallet" && (
@@ -930,40 +922,20 @@ export default function CardAdvisor() {
                   </div>
                 </div>
 
-                {/* Section B: Stats Bar */}
-                {(lookups > 0) && (
-                  <div style={{ display:"flex",justifyContent:"center",gap:"24px",marginBottom:"20px",animation:"fUp 0.3s ease" }}>
-                    <div style={{ textAlign:"center" }}>
-                      <div style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"18px",fontWeight:800,color:"#00DC82" }}>{lookups}</div>
-                      <div style={{ fontSize:"10px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.08em",textTransform:"uppercase",fontWeight:600 }}>Lookups</div>
-                    </div>
-                    <div style={{ width:"1px",backgroundColor:"rgba(255,255,255,0.06)" }} />
-                    <div style={{ textAlign:"center" }}>
-                      <div style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"18px",fontWeight:800,color:"#00DC82" }}>{sel.length}</div>
-                      <div style={{ fontSize:"10px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.08em",textTransform:"uppercase",fontWeight:600 }}>Cards</div>
-                    </div>
-                    <div style={{ width:"1px",backgroundColor:"rgba(255,255,255,0.06)" }} />
-                    <div style={{ textAlign:"center" }}>
-                      <div style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"18px",fontWeight:800,color:"#FFD700" }}>~${totalSaved.toFixed(0)}</div>
-                      <div style={{ fontSize:"10px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.08em",textTransform:"uppercase",fontWeight:600 }}>Extra rewards</div>
-                    </div>
-                  </div>
-                )}
-
                 {/* Section C: Search Bar */}
-                <div style={{ position:"relative",marginBottom:"20px" }}
+                <div style={{ position:"relative",margin:"32px 0" }}
                   onMouseEnter={e => { const g = e.currentTarget.querySelector('.search-glow'); if(g) g.style.opacity='0.7'; }}
-                  onMouseLeave={e => { const g = e.currentTarget.querySelector('.search-glow'); if(g) g.style.opacity='0.4'; }}>
+                  onMouseLeave={e => { const g = e.currentTarget.querySelector('.search-glow'); if(g) g.style.opacity='0.5'; }}>
                   <div className="search-glow" />
                   <div style={{ position:"relative",zIndex:1,padding:"16px",borderRadius:"16px",backgroundColor:"#0F1623",border:"1.5px solid rgba(0,220,130,0.4)" }}>
                     <div style={{ display:"flex",gap:"10px",alignItems:"center" }}>
                       <div style={{ position:"relative",flex:1 }}>
-                        <div style={{ position:"absolute",left:"16px",top:"50%",transform:"translateY(-50%)",fontSize:"18px",color:"#00DC82",opacity:1,pointerEvents:"none",animation:"searchPulse 3s ease-in-out infinite" }}>🔍</div>
+                        <div style={{ position:"absolute",left:"18px",top:"50%",transform:"translateY(-50%)",fontSize:"18px",color:"#00DC82",opacity:1,pointerEvents:"none",animation:"searchPulse 3s ease-in-out infinite" }}>🔍</div>
                         <input ref={ref} type="text" placeholder="Where are you spending?" value={input}
                           onChange={e => { setInput(e.target.value); setLastTop(null); }}
                           onKeyDown={e => { if (e.key === "Enter") handleSearch(); }}
-                          style={{ width:"100%",padding:"18px 20px 18px 48px",border:"2px solid rgba(255,255,255,0.06)",borderRadius:"14px",
-                            backgroundColor:"transparent",fontFamily:"'Inter',sans-serif",fontSize:"18px",fontWeight:500,color:"#FFF",outline:"none",
+                          style={{ width:"100%",padding:"20px 24px 20px 52px",border:"2px solid rgba(255,255,255,0.06)",borderRadius:"14px",
+                            backgroundColor:"transparent",fontFamily:"'Inter',sans-serif",fontSize:"20px",fontWeight:500,color:"#FFF",outline:"none",
                             transition:"all 0.2s ease" }}
                           onFocus={e => { e.target.style.borderColor="rgba(0,220,130,0.4)"; e.target.style.backgroundColor="rgba(0,220,130,0.03)"; }}
                           onBlur={e => { e.target.style.borderColor="rgba(255,255,255,0.06)"; e.target.style.backgroundColor="transparent"; }} />
