@@ -578,7 +578,7 @@ export default function CardAdvisor() {
           if (data?.card_ids?.length) {
             console.log("[LOAD] setting sel to", data.card_ids);
             setSel(data.card_ids);
-            setView("search");
+            setView("dashboard");
           } else {
             console.log("[LOAD] no card_ids found in Supabase (data was:", data, ")");
           }
@@ -595,7 +595,7 @@ export default function CardAdvisor() {
         if (s) {
           const parsed = JSON.parse(s);
           setSel(parsed);
-          if (parsed.length) setView("search");
+          if (parsed.length) setView("dashboard");
         }
       } catch {}
       try {
@@ -780,68 +780,50 @@ export default function CardAdvisor() {
 
       <Confetti active={confetti} />
 
-      {/* Header */}
-      <div style={{ padding:"24px 20px 16px",textAlign:"center",position:"relative",zIndex:1 }}>
-        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"12px" }}>
-          <div style={{ width:"80px" }} />
+      {/* Nav Bar */}
+      <div style={{ position:"sticky",top:0,zIndex:20,backdropFilter:"blur(12px)",backgroundColor:"rgba(10,15,26,0.92)",borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 20px",maxWidth:"560px",margin:"0 auto" }}>
           <div style={{ display:"inline-flex",alignItems:"center",gap:"8px",padding:"5px 12px",borderRadius:"20px",
             backgroundColor:"rgba(0,220,130,0.08)",border:"1px solid rgba(0,220,130,0.15)" }}>
             <div style={{ width:"6px",height:"6px",borderRadius:"50%",backgroundColor:"#00DC82",animation:"pulse 2s ease-in-out infinite" }} />
             <span style={{ fontFamily:"'Syne',sans-serif",fontSize:"11px",fontWeight:700,letterSpacing:"0.12em",textTransform:"uppercase",color:"#00DC82" }}>CardAdvisor</span>
           </div>
+          <div style={{ display:"flex",gap:"24px" }}>
+            {[{key:"dashboard",label:"Dashboard"},{key:"wallet",label:"Wallet"},{key:"analytics",label:"Analytics"}].map(t => (
+              <button key={t.key} onClick={() => { setView(t.key); if(t.key==="dashboard") setTimeout(()=>ref.current?.focus(),150); }}
+                style={{ background:"none",border:"none",padding:"4px 0",fontFamily:"'Syne',sans-serif",fontSize:"11px",fontWeight:700,
+                  letterSpacing:"0.1em",textTransform:"uppercase",cursor:"pointer",
+                  color: view===t.key?"#00DC82":"rgba(255,255,255,0.3)",
+                  borderBottom: view===t.key?"2px solid #00DC82":"2px solid transparent",
+                  transition:"all 0.25s ease" }}>
+                {t.label}
+              </button>
+            ))}
+          </div>
           {!authLoading && (
             user ? (
               <button onClick={signOut} style={{ padding:"6px 14px",borderRadius:"20px",border:"1px solid rgba(255,255,255,0.1)",
                 backgroundColor:"rgba(255,255,255,0.04)",fontFamily:"'Syne',sans-serif",fontSize:"10px",fontWeight:700,
-                color:"rgba(255,255,255,0.5)",cursor:"pointer",letterSpacing:"0.05em",width:"80px" }}>
+                color:"rgba(255,255,255,0.5)",cursor:"pointer",letterSpacing:"0.05em" }}>
                 Sign out
               </button>
             ) : (
               <button onClick={signIn} style={{ padding:"6px 14px",borderRadius:"20px",border:"1px solid rgba(0,220,130,0.2)",
                 backgroundColor:"rgba(0,220,130,0.06)",fontFamily:"'Syne',sans-serif",fontSize:"10px",fontWeight:700,
-                color:"#00DC82",cursor:"pointer",letterSpacing:"0.05em",width:"80px" }}>
+                color:"#00DC82",cursor:"pointer",letterSpacing:"0.05em" }}>
                 Sign in
               </button>
             )
           )}
         </div>
+      </div>
+
+      {/* Header */}
+      <div style={{ padding:"24px 20px 16px",textAlign:"center",position:"relative",zIndex:1 }}>
         <h1 style={{ fontFamily:"'Syne',sans-serif",fontSize:"26px",fontWeight:800,letterSpacing:"-0.03em",lineHeight:1.15,
           background:"linear-gradient(135deg,#FFF 0%,rgba(255,255,255,0.6) 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent" }}>
           Maximize every purchase.
         </h1>
-
-        {/* Stats bar */}
-        {(lookups > 0) && (
-          <div style={{ display:"flex",justifyContent:"center",gap:"24px",marginTop:"12px",animation:"fUp 0.3s ease" }}>
-            <div style={{ textAlign:"center" }}>
-              <div style={{ fontFamily:"'Syne',sans-serif",fontSize:"18px",fontWeight:800,color:"#00DC82" }}>{lookups}</div>
-              <div style={{ fontSize:"10px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.08em",textTransform:"uppercase",fontWeight:600 }}>Lookups</div>
-            </div>
-            <div style={{ width:"1px",backgroundColor:"rgba(255,255,255,0.06)" }} />
-            <div style={{ textAlign:"center" }}>
-              <div style={{ fontFamily:"'Syne',sans-serif",fontSize:"18px",fontWeight:800,color:"#00DC82" }}>{sel.length}</div>
-              <div style={{ fontSize:"10px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.08em",textTransform:"uppercase",fontWeight:600 }}>Cards</div>
-            </div>
-            <div style={{ width:"1px",backgroundColor:"rgba(255,255,255,0.06)" }} />
-            <div style={{ textAlign:"center" }}>
-              <div style={{ fontFamily:"'Syne',sans-serif",fontSize:"18px",fontWeight:800,color:"#FFD700" }}>~${totalSaved.toFixed(0)}</div>
-              <div style={{ fontSize:"10px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.08em",textTransform:"uppercase",fontWeight:600 }}>Extra rewards</div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Tabs */}
-      <div style={{ display:"flex",margin:"0 20px",borderRadius:"12px",backgroundColor:"rgba(255,255,255,0.03)",padding:"4px",position:"relative",zIndex:1 }}>
-        {[{key:"wallet",label:"My Wallet"},{key:"search",label:"Find Best Card"}].map(t => (
-          <button key={t.key} onClick={() => { setView(t.key); if(t.key==="search") setTimeout(()=>ref.current?.focus(),150); }}
-            style={{ flex:1,padding:"12px",border:"none",borderRadius:"10px",
-              backgroundColor: view===t.key?"rgba(0,220,130,0.1)":"transparent",
-              fontFamily:"'Syne',sans-serif",fontSize:"12px",fontWeight:700,letterSpacing:"0.06em",
-              textTransform:"uppercase",color: view===t.key?"#00DC82":"rgba(255,255,255,0.3)",cursor:"pointer",transition:"all 0.25s ease" }}>
-            {t.label}
-          </button>
-        ))}
       </div>
 
       {/* Content */}
@@ -873,7 +855,7 @@ export default function CardAdvisor() {
             })}
 
             {sel.length > 0 && (
-              <button onClick={() => { setView("search"); setTimeout(()=>ref.current?.focus(),150); }}
+              <button onClick={() => { setView("dashboard"); setTimeout(()=>ref.current?.focus(),150); }}
                 style={{ width:"100%",padding:"16px",background:"linear-gradient(135deg,#00DC82 0%,#00C974 100%)",
                   color:"#0A0F1A",border:"none",borderRadius:"14px",fontFamily:"'Syne',sans-serif",fontSize:"14px",
                   fontWeight:800,letterSpacing:"0.04em",cursor:"pointer",marginTop:"8px",
@@ -884,8 +866,8 @@ export default function CardAdvisor() {
           </div>
         )}
 
-        {/* SEARCH */}
-        {view === "search" && (
+        {/* DASHBOARD */}
+        {view === "dashboard" && (
           <div style={{ animation:"fUp 0.3s ease" }}>
             {sel.length === 0 ? (
               <div style={{ textAlign:"center",padding:"48px 20px" }}>
@@ -899,6 +881,24 @@ export default function CardAdvisor() {
               </div>
             ) : (
               <>
+                {(lookups > 0) && (
+                  <div style={{ display:"flex",justifyContent:"center",gap:"24px",marginBottom:"20px",animation:"fUp 0.3s ease" }}>
+                    <div style={{ textAlign:"center" }}>
+                      <div style={{ fontFamily:"'Syne',sans-serif",fontSize:"18px",fontWeight:800,color:"#00DC82" }}>{lookups}</div>
+                      <div style={{ fontSize:"10px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.08em",textTransform:"uppercase",fontWeight:600 }}>Lookups</div>
+                    </div>
+                    <div style={{ width:"1px",backgroundColor:"rgba(255,255,255,0.06)" }} />
+                    <div style={{ textAlign:"center" }}>
+                      <div style={{ fontFamily:"'Syne',sans-serif",fontSize:"18px",fontWeight:800,color:"#00DC82" }}>{sel.length}</div>
+                      <div style={{ fontSize:"10px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.08em",textTransform:"uppercase",fontWeight:600 }}>Cards</div>
+                    </div>
+                    <div style={{ width:"1px",backgroundColor:"rgba(255,255,255,0.06)" }} />
+                    <div style={{ textAlign:"center" }}>
+                      <div style={{ fontFamily:"'Syne',sans-serif",fontSize:"18px",fontWeight:800,color:"#FFD700" }}>~${totalSaved.toFixed(0)}</div>
+                      <div style={{ fontSize:"10px",color:"rgba(255,255,255,0.3)",letterSpacing:"0.08em",textTransform:"uppercase",fontWeight:600 }}>Extra rewards</div>
+                    </div>
+                  </div>
+                )}
                 <div style={{ position:"relative",marginBottom:"20px" }}>
                   <div style={{ display:"flex",gap:"10px",alignItems:"center" }}>
                     <div style={{ position:"relative",flex:1 }}>
@@ -999,6 +999,19 @@ export default function CardAdvisor() {
                 )}
               </>
             )}
+          </div>
+        )}
+
+        {/* ANALYTICS */}
+        {view === "analytics" && (
+          <div style={{ animation:"fUp 0.3s ease",textAlign:"center",padding:"48px 20px" }}>
+            <div style={{ fontSize:"48px",marginBottom:"16px" }}>📊</div>
+            <h2 style={{ fontFamily:"'Syne',sans-serif",fontSize:"22px",fontWeight:800,color:"#FFF",marginBottom:"8px" }}>Analytics</h2>
+            <div style={{ fontFamily:"'Outfit',sans-serif",fontSize:"14px",color:"rgba(255,255,255,0.4)",marginBottom:"32px" }}>Coming Soon</div>
+            <div style={{ padding:"24px",borderRadius:"16px",backgroundColor:"rgba(255,255,255,0.02)",border:"1.5px solid rgba(255,255,255,0.06)",maxWidth:"360px",margin:"0 auto" }}>
+              <div style={{ fontFamily:"'Syne',sans-serif",fontSize:"13px",fontWeight:600,color:"rgba(255,255,255,0.5)" }}>Spending insights &amp; optimization tips</div>
+              <div style={{ fontFamily:"'Outfit',sans-serif",fontSize:"12px",color:"rgba(255,255,255,0.25)",marginTop:"8px" }}>Track your reward earnings, category breakdowns, and card utilization over time.</div>
+            </div>
           </div>
         )}
       </div>
