@@ -535,6 +535,8 @@ export default function CardAdvisor() {
   const [authLoading, setAuthLoading] = useState(true);
   const walletLoaded = useRef(false);
   const userRef = useRef(null);
+  const lookupsRef = useRef(lookups);
+  const totalSavedRef = useRef(totalSaved);
 
   // Listen for auth changes
   useEffect(() => {
@@ -550,13 +552,15 @@ export default function CardAdvisor() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Keep userRef in sync so the save effect can read it without depending on it
+  // Keep refs in sync so save effects can read them without depending on them
   useEffect(() => { userRef.current = user; }, [user]);
+  useEffect(() => { lookupsRef.current = lookups; }, [lookups]);
+  useEffect(() => { totalSavedRef.current = totalSaved; }, [totalSaved]);
 
   const signIn = () => supabase.auth.signInWithOAuth({ provider: "google" });
   const signOut = () => supabase.auth.signOut();
 
-  // Load wallet: from Supabase if logged in, else localStorage
+  // Load wallet + stats: from Supabase if logged in, else localStorage
   useEffect(() => {
     console.log("[LOAD] effect fired — authLoading:", authLoading, "user:", user?.id ?? null);
     if (authLoading) { console.log("[LOAD] still loading auth, skipping"); return; }
@@ -565,7 +569,7 @@ export default function CardAdvisor() {
       console.log("[LOAD] fetching wallet from Supabase for user:", user.id);
       supabase
         .from("user_wallets")
-        .select("card_ids")
+        .select("card_ids, lookups, total_saved")
         .eq("user_id", user.id)
         .maybeSingle()
         .then(({ data, error }) => {
@@ -577,6 +581,8 @@ export default function CardAdvisor() {
           } else {
             console.log("[LOAD] no card_ids found in Supabase (data was:", data, ")");
           }
+          if (data?.lookups != null) setLookups(data.lookups);
+          if (data?.total_saved != null) setTotalSaved(data.total_saved);
           walletLoaded.current = true;
           console.log("[LOAD] walletLoaded set to true");
         });
@@ -587,14 +593,14 @@ export default function CardAdvisor() {
         console.log("[LOAD] localStorage ca_cards:", s);
         if (s) setSel(JSON.parse(s));
       } catch {}
+      try {
+        const l = window.localStorage?.getItem?.("ca_lookups");
+        if (l) setLookups(parseInt(l));
+        const t = window.localStorage?.getItem?.("ca_saved");
+        if (t) setTotalSaved(parseFloat(t));
+      } catch {}
       walletLoaded.current = true;
     }
-    try {
-      const l = window.localStorage?.getItem?.("ca_lookups");
-      if (l) setLookups(parseInt(l));
-      const t = window.localStorage?.getItem?.("ca_saved");
-      if (t) setTotalSaved(parseFloat(t));
-    } catch {}
   }, [user, authLoading]);
 
   // Save wallet: to Supabase if logged in, always to localStorage.
@@ -605,7 +611,7 @@ export default function CardAdvisor() {
     if (!walletLoaded.current) { console.log("[SAVE] walletLoaded is false, skipping"); return; }
     try { window.localStorage?.setItem?.("ca_cards", JSON.stringify(sel)); } catch {}
     if (userRef.current) {
-      const payload = { user_id: userRef.current.id, card_ids: sel, updated_at: new Date().toISOString() };
+      const payload = { user_id: userRef.current.id, card_ids: sel, lookups: lookupsRef.current, total_saved: totalSavedRef.current, updated_at: new Date().toISOString() };
       console.log("[SAVE] upserting to Supabase:", payload);
       supabase
         .from("user_wallets")
@@ -618,9 +624,27 @@ export default function CardAdvisor() {
     }
   }, [sel]);
 
-  // Save stats to localStorage
-  useEffect(() => { try { window.localStorage?.setItem?.("ca_lookups", lookups.toString()); } catch {} }, [lookups]);
-  useEffect(() => { try { window.localStorage?.setItem?.("ca_saved", totalSaved.toString()); } catch {} }, [totalSaved]);
+  // Save stats: to Supabase if logged in (debounced), always to localStorage.
+  const statsTimer = useRef(null);
+  useEffect(() => {
+    if (!walletLoaded.current) return;
+    try { window.localStorage?.setItem?.("ca_lookups", lookups.toString()); } catch {}
+    try { window.localStorage?.setItem?.("ca_saved", totalSaved.toString()); } catch {}
+    if (userRef.current) {
+      clearTimeout(statsTimer.current);
+      statsTimer.current = setTimeout(() => {
+        const payload = { user_id: userRef.current.id, lookups, total_saved: totalSaved, updated_at: new Date().toISOString() };
+        console.log("[SAVE-STATS] upserting to Supabase:", payload);
+        supabase
+          .from("user_wallets")
+          .upsert(payload, { onConflict: "user_id" })
+          .then(({ data, error }) => {
+            if (error) console.error("[SAVE-STATS] error:", error);
+          });
+      }, 2000);
+    }
+    return () => clearTimeout(statsTimer.current);
+  }, [lookups, totalSaved]);
 
   const toggle = (id) => setSel(p => p.includes(id) ? p.filter(c => c !== id) : [...p, id]);
 
