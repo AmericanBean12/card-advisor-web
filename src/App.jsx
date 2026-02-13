@@ -529,6 +529,45 @@ export default function CardAdvisor() {
   const [totalSaved, setTotalSaved] = useState(0);
   const [search, setSearch] = useState("");
   const [showAllCats, setShowAllCats] = useState(false);
+  const [cardsDB, setCardsDB] = useState([]);
+  const [merchantMap, setMerchantMap] = useState({});
+  const [dataLoading, setDataLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      supabase.from("cards").select("*"),
+      supabase.from("merchant_mappings").select("*"),
+    ]).then(([cardsRes, merchRes]) => {
+      if (cardsRes.error || merchRes.error) {
+        console.error("Supabase data fetch error:", cardsRes.error, merchRes.error);
+        setCardsDB(CARDS_DATABASE);
+        setMerchantMap(MC);
+      } else {
+        setCardsDB(cardsRes.data.map(r => ({
+          id: r.id,
+          name: r.name,
+          issuer: r.issuer,
+          shortName: r.short_name,
+          annualFee: r.annual_fee,
+          currency: r.currency,
+          color: r.color,
+          gradient: r.gradient,
+          categories: r.categories,
+          ...(r.note != null && { note: r.note }),
+        })));
+        const map = {};
+        merchRes.data.forEach(r => { map[r.merchant] = r.category; });
+        setMerchantMap(map);
+      }
+      setDataLoading(false);
+    }).catch(err => {
+      console.error("Supabase data fetch failed:", err);
+      setCardsDB(CARDS_DATABASE);
+      setMerchantMap(MC);
+      setDataLoading(false);
+    });
+  }, []);
+
   const ref = useRef(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
   useEffect(() => {
@@ -663,11 +702,11 @@ export default function CardAdvisor() {
   const resolveCatSync = useCallback((i) => {
     const l = i.toLowerCase().trim();
     if (!l) return null;
-    if (MC[l]) return MC[l];
-    for (const [m, c] of Object.entries(MC)) { if (l.includes(m) || m.includes(l)) return c; }
+    if (merchantMap[l]) return merchantMap[l];
+    for (const [m, c] of Object.entries(merchantMap)) { if (l.includes(m) || m.includes(l)) return c; }
     for (const [k, v] of Object.entries(CATEGORY_LABELS)) { if (l === k || l === v.toLowerCase()) return k; }
     return "general";
-  }, []);
+  }, [merchantMap]);
 
   const [cat, setCat] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
@@ -699,11 +738,11 @@ export default function CardAdvisor() {
   const ranked = useMemo(() => {
     if (!cat || sel.length === 0) return [];
     return sel.map(id => {
-      const card = CARDS_DATABASE.find(c => c.id === id);
+      const card = cardsDB.find(c => c.id === id);
       const rate = card.categories[cat] || card.categories.general || 1;
       return { card, rate };
     }).sort((a, b) => b.rate - a.rate);
-  }, [cat, sel]);
+  }, [cat, sel, cardsDB]);
 
   // Track which merchant searches we've already counted
   const countedSearches = useRef(new Set());
@@ -714,7 +753,7 @@ export default function CardAdvisor() {
     const key = input.toLowerCase().trim();
 
     // Only count if this is an exact merchant match (not just partial typing)
-    const isExactMatch = MC[key] || Object.keys(MC).some(m => m === key);
+    const isExactMatch = merchantMap[key] || Object.keys(merchantMap).some(m => m === key);
     // Or if user selected from suggestions / category buttons (input matches a label)
     const isCategoryMatch = Object.values(CATEGORY_LABELS).some(v => v.toLowerCase() === key);
 
@@ -744,14 +783,14 @@ export default function CardAdvisor() {
       setConfetti(true);
       setTimeout(() => setConfetti(false), 2000);
     }
-  }, [ranked, lastTop, input]);
+  }, [ranked, lastTop, input, merchantMap]);
 
   const suggestions = useMemo(() => {
     if (!input.trim() || input.length < 2) return [];
     const l = input.toLowerCase();
-    return Object.keys(MC).filter(m => m.includes(l)).slice(0, 6)
+    return Object.keys(merchantMap).filter(m => m.includes(l)).slice(0, 6)
       .map(m => m.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" "));
-  }, [input]);
+  }, [input, merchantMap]);
 
   const savings = useMemo(() => {
     if (ranked.length < 2) return null;
@@ -767,7 +806,7 @@ export default function CardAdvisor() {
     cats.forEach(cat => {
       let best = 0;
       sel.forEach(id => {
-        const card = CARDS_DATABASE.find(c => c.id === id);
+        const card = cardsDB.find(c => c.id === id);
         if (card) best = Math.max(best, card.categories[cat] || card.categories.general || 1);
       });
       if (best >= 5) total += 10;
@@ -781,15 +820,38 @@ export default function CardAdvisor() {
     else if (total <= 85) { label = "Great"; pct = "Top 15%"; }
     else { label = "Excellent"; pct = "Top 5%"; }
     return { score: total, label, pct };
-  }, [sel]);
+  }, [sel, cardsDB]);
 
-  const issuers = [...new Set(CARDS_DATABASE.map(c => c.issuer))];
+  const issuers = [...new Set(cardsDB.map(c => c.issuer))];
   const filteredCards = search.trim()
-    ? CARDS_DATABASE.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.issuer.toLowerCase().includes(search.toLowerCase()))
-    : CARDS_DATABASE;
+    ? cardsDB.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.issuer.toLowerCase().includes(search.toLowerCase()))
+    : cardsDB;
   const filteredIssuers = search.trim()
     ? [...new Set(filteredCards.map(c => c.issuer))]
     : issuers;
+
+  if (dataLoading) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        backgroundColor: "#0A0F1A",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}>
+        <style>{`@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }`}</style>
+        <div style={{
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontSize: "18px",
+          fontWeight: 700,
+          color: "#00DC82",
+          animation: "pulse 1.5s ease-in-out infinite",
+        }}>
+          Loading CardAdvisor...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight:"100vh",backgroundColor:"#0A0F1A",color:"#FFF",fontFamily:"'Inter',sans-serif",position:"relative",overflow:"hidden" }}>
@@ -865,7 +927,7 @@ export default function CardAdvisor() {
             {/* Card search */}
             <div style={{ position:"relative",marginBottom:"16px" }}>
               <div style={{ position:"absolute",left:"14px",top:"50%",transform:"translateY(-50%)",fontSize:"14px",opacity:0.4,pointerEvents:"none" }}>🔍</div>
-              <input type="text" placeholder={`Search ${CARDS_DATABASE.length} cards...`} value={search} onChange={e => setSearch(e.target.value)}
+              <input type="text" placeholder={`Search ${cardsDB.length} cards...`} value={search} onChange={e => setSearch(e.target.value)}
                 style={{ width:"100%",padding:"12px 14px 12px 40px",border:"1.5px solid rgba(255,255,255,0.06)",borderRadius:"12px",
                   backgroundColor:"rgba(255,255,255,0.03)",fontFamily:"'Inter',sans-serif",fontSize:"13px",color:"#FFF",outline:"none" }} />
             </div>
@@ -971,7 +1033,7 @@ export default function CardAdvisor() {
                       </button>
                     </div>
 
-                    {suggestions.length > 0 && input.length >= 2 && !MC[input.toLowerCase()] && (
+                    {suggestions.length > 0 && input.length >= 2 && !merchantMap[input.toLowerCase()] && (
                       <div style={{ position:"absolute",top:"calc(100% + 4px)",left:0,right:0,backgroundColor:"#141A2A",
                         border:"1.5px solid rgba(255,255,255,0.08)",borderRadius:"12px",zIndex:10,overflow:"hidden",boxShadow:"0 8px 32px rgba(0,0,0,0.5)" }}>
                         {suggestions.map((s, i) => (
@@ -981,7 +1043,7 @@ export default function CardAdvisor() {
                               color:"rgba(255,255,255,0.7)",cursor:"pointer",borderBottom: i<suggestions.length-1?"1px solid rgba(255,255,255,0.04)":"none" }}
                             onMouseEnter={e => e.currentTarget.style.backgroundColor="rgba(0,220,130,0.06)"}
                             onMouseLeave={e => e.currentTarget.style.backgroundColor="transparent"}>
-                            <span style={{ fontSize:"14px" }}>{CATEGORY_ICONS[MC[s.toLowerCase()]] || "🏪"}</span>{s}
+                            <span style={{ fontSize:"14px" }}>{CATEGORY_ICONS[merchantMap[s.toLowerCase()]] || "🏪"}</span>{s}
                           </button>
                         ))}
                       </div>
@@ -1097,7 +1159,7 @@ export default function CardAdvisor() {
                     <div style={{ background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:"16px",padding:"16px" }}>
                       <div className="wallet-scroll" style={{ display:"flex",gap:"14px",overflowX:"auto",paddingBottom:"8px" }}>
                         {sel.map(id => {
-                          const card = CARDS_DATABASE.find(c => c.id === id);
+                          const card = cardsDB.find(c => c.id === id);
                           if (!card) return null;
                           const isLight = card.id === "apple-card";
                           return (
