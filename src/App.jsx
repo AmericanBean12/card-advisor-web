@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { supabase } from "./supabaseClient";
 
-const CATEGORY_LABELS = { dining:"Dining",groceries:"Groceries",flights:"Flights",hotels:"Hotels",gas:"Gas",transit:"Transit & Rideshare",streaming:"Streaming",online_shopping:"Online Shopping",drugstores:"Drugstores",home_improvement:"Home Improvement",car_rental:"Car Rental",travel:"Travel",entertainment:"Entertainment",phone_plans:"Phone Plans",fitness:"Fitness",shipping:"Shipping",general:"Everything Else" };
-const CATEGORY_ICONS = { dining:"🍽️",groceries:"🛒",flights:"✈️",hotels:"🏨",gas:"⛽",transit:"🚗",streaming:"📺",online_shopping:"🛍️",drugstores:"💊",home_improvement:"🔨",car_rental:"🚙",travel:"🌍",entertainment:"🎭",phone_plans:"📱",fitness:"🏋️",shipping:"📦",general:"💳" };
+const CATEGORY_LABELS = { dining:"Dining",groceries:"Groceries",flights:"Flights",hotels:"Hotels",gas:"Gas",transit:"Transit & Rideshare",streaming:"Streaming",drugstores:"Drugstores",home_improvement:"Home Improvement",car_rental:"Car Rental",entertainment:"Entertainment",phone_plans:"Phone Plans",fitness:"Fitness",shipping:"Shipping",portal_flights:"Portal Flights",portal_hotels:"Portal Hotels",wholesale_clubs:"Wholesale Clubs",general:"Everything Else" };
+const CATEGORY_ICONS = { dining:"🍽️",groceries:"🛒",flights:"✈️",hotels:"🏨",gas:"⛽",transit:"🚗",streaming:"📺",drugstores:"💊",home_improvement:"🔨",car_rental:"🚙",entertainment:"🎭",phone_plans:"📱",fitness:"🏋️",shipping:"📦",portal_flights:"✈",portal_hotels:"🏛",wholesale_clubs:"🏪",general:"💳" };
 
 // ============================================
 // CONFETTI
@@ -172,6 +172,7 @@ export default function CardAdvisor() {
           gradient: r.gradient,
           categories: r.categories,
           ...(r.note != null && { note: r.note }),
+          ...(r.merchant_overrides != null && { merchantOverrides: r.merchant_overrides }),
         })));
         const map = {};
         merchRes.data.forEach(r => { map[r.merchant] = r.category; });
@@ -346,7 +347,9 @@ export default function CardAdvisor() {
         body: JSON.stringify({ merchant: input }),
       });
       const data = await res.json();
-      setCat(data.category || "general");
+      let category = data.category || "general";
+      if (category === "travel" || category === "online_shopping") category = "general";
+      setCat(category);
     } catch {
       setCat("general");
     }
@@ -355,12 +358,21 @@ export default function CardAdvisor() {
 
   const ranked = useMemo(() => {
     if (!cat || sel.length === 0) return [];
+    const q = input.toLowerCase().trim();
     return sel.map(id => {
       const card = cardsDB.find(c => c.id === id);
-      const rate = card.categories[cat] || card.categories.general || 1;
+      let rate = card.categories[cat] || card.categories.general || 1;
+      if (card.merchantOverrides && q) {
+        for (const [mk, mv] of Object.entries(card.merchantOverrides)) {
+          if (q === mk || q.includes(mk) || mk.includes(q)) {
+            rate = mv;
+            break;
+          }
+        }
+      }
       return { card, rate };
     }).sort((a, b) => b.rate - a.rate);
-  }, [cat, sel, cardsDB]);
+  }, [cat, sel, cardsDB, input]);
 
   // Track which merchant searches we've already counted
   const countedSearches = useRef(new Set());
@@ -418,7 +430,7 @@ export default function CardAdvisor() {
   }, [ranked]);
 
   const optScore = useMemo(() => {
-    const cats = ["dining","groceries","flights","hotels","gas","transit","streaming","online_shopping","drugstores","home_improvement"];
+    const cats = ["dining","groceries","flights","hotels","gas","transit","streaming","drugstores","home_improvement","wholesale_clubs"];
     if (sel.length === 0) return { score: 0, label: "Needs Work", pct: "Top 80%" };
     let total = 0;
     cats.forEach(cat => {
@@ -716,9 +728,9 @@ export default function CardAdvisor() {
                       color:"rgba(255,255,255,0.2)",marginBottom:"12px",fontFamily:"'Space Grotesk',sans-serif" }}>Quick Categories</div>
                     <div className="cat-grid" style={{ display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:"10px" }}>
                       {(() => {
-                        const ORDERED_CATS = ["dining","groceries","gas","travel","hotels","online_shopping",
-                          "flights","streaming","transit","drugstores","home_improvement","entertainment",
-                          "car_rental","phone_plans","fitness","shipping"];
+                        const ORDERED_CATS = ["dining","groceries","gas","flights","hotels","streaming",
+                          "transit","drugstores","home_improvement","entertainment",
+                          "car_rental","phone_plans","fitness","shipping","portal_flights","portal_hotels","wholesale_clubs"];
                         const defaultCats = ORDERED_CATS.slice(0, 6);
                         const extraCats = ORDERED_CATS.slice(6);
                         return (

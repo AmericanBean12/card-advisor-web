@@ -3,7 +3,24 @@
     "allow": [
       "Bash(npm run build:*)",
       "Bash(powershell -Command:*)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "WebSearch",
+      "Bash(ls -la \"C:\\\\Users\\\\patri\\\\card-advisor-web\\\\supabase\"\" | grep -v \"^d \")",
+      "Bash(git -C \"C:\\\\Users\\\\patri\\\\card-advisor-web\" log --all --full-history --name-status)",
+      "Bash(git -C \"C:\\\\Users\\\\patri\\\\card-advisor-web\" log --all --name-only --oneline)",
+      "Bash(git -C \"C:\\\\Users\\\\patri\\\\card-advisor-web\" show 3bacc21 --name-only)",
+      "Bash(git -C \"C:\\\\Users\\\\patri\\\\card-advisor-web\" show 5e90a47 --name-only)",
+      "Bash(git -C \"C:\\\\Users\\\\patri\\\\card-advisor-web\" log --all --oneline)",
+      "Bash(git -C \"C:\\\\Users\\\\patri\\\\card-advisor-web\" log --reverse --oneline)",
+      "Bash(git -C \"C:\\\\Users\\\\patri\\\\card-advisor-web\" show 513b3c6 --name-only)",
+      "Bash(git -C \"C:\\\\Users\\\\patri\\\\card-advisor-web\" show a48f05c --name-only)",
+      "Bash(git -C \"C:\\\\Users\\\\patri\\\\card-advisor-web\" log --all --format=\"%H %s\")",
+      "Bash(git -C \"C:\\\\Users\\\\patri\\\\card-advisor-web\" log --all -p -- \"*.sql\")",
+      "Bash(git -C \"C:\\\\Users\\\\patri\\\\card-advisor-web\" log --all --grep=\"CREATE\\\\|ALTER\\\\|DROP\\\\|TABLE\\\\|schema\" -i --oneline)",
+      "Bash(git -C \"C:\\\\Users\\\\patri\\\\card-advisor-web\" log --all -S \"CREATE TABLE\" --oneline)",
+      "Bash(git -C \"C:\\\\Users\\\\patri\\\\card-advisor-web\" log --all --oneline --reverse)",
+      "Bash(git -C \"C:\\\\Users\\\\patri\\\\card-advisor-web\" show 4239fda --stat)",
+      "Bash(npx vite:*)"
     ]
   }
 }
