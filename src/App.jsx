@@ -578,6 +578,7 @@ export default function CardAdvisor() {
           if (data?.card_ids?.length) {
             console.log("[LOAD] setting sel to", data.card_ids);
             setSel(data.card_ids);
+            setView("search");
           } else {
             console.log("[LOAD] no card_ids found in Supabase (data was:", data, ")");
           }
@@ -591,7 +592,11 @@ export default function CardAdvisor() {
       try {
         const s = window.localStorage?.getItem?.("ca_cards");
         console.log("[LOAD] localStorage ca_cards:", s);
-        if (s) setSel(JSON.parse(s));
+        if (s) {
+          const parsed = JSON.parse(s);
+          setSel(parsed);
+          if (parsed.length) setView("search");
+        }
       } catch {}
       try {
         const l = window.localStorage?.getItem?.("ca_lookups");
