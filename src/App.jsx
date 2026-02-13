@@ -797,7 +797,7 @@ export default function CardAdvisor() {
         *{box-sizing:border-box;margin:0;padding:0}
         input::placeholder{color:rgba(255,255,255,0.25)}
         ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
-        @media(min-width:600px){.cat-grid{grid-template-columns:repeat(6,1fr)!important}}
+        @media(min-width:600px){.cat-grid{grid-template-columns:repeat(auto-fit,minmax(100px,1fr))!important}}
         .wallet-scroll::-webkit-scrollbar{display:none}
         .search-glow{position:absolute;inset:-2px;border-radius:18px;background:linear-gradient(135deg,rgba(0,220,130,0.3),rgba(59,130,246,0.3));filter:blur(20px);opacity:0.5;pointer-events:none;transition:opacity 0.3s ease;z-index:0}
       `}</style>
@@ -812,12 +812,12 @@ export default function CardAdvisor() {
 
       {/* Nav Bar */}
       <div style={{ position:"sticky",top:0,zIndex:20,backdropFilter:"blur(10px)",WebkitBackdropFilter:"blur(10px)",backgroundColor:"rgba(10,15,26,0.8)",borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 20px",maxWidth:"560px",margin:"0 auto" }}>
+        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 40px",maxWidth:"720px",margin:"0 auto" }}>
           <div style={{ display:"inline-flex",alignItems:"center",gap:"0px" }}>
             <span style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"13px",fontWeight:700,letterSpacing:"0.15em",color:"#FFF" }}>CARD</span>
             <span style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"13px",fontWeight:700,letterSpacing:"0.15em",color:"#00DC82" }}>ADVISOR</span>
           </div>
-          <div style={{ display:"flex",gap:"24px" }}>
+          <div style={{ display:"flex",gap:"32px" }}>
             {[{key:"dashboard",label:"Dashboard"},{key:"wallet",label:"Wallet"},{key:"analytics",label:"Analytics"}].map(t => (
               <button key={t.key} onClick={() => { setView(t.key); if(t.key==="dashboard") setTimeout(()=>ref.current?.focus(),150); }}
                 style={{ background:"none",border:"none",padding:"4px 0",fontFamily:"'Space Grotesk',sans-serif",fontSize:"11px",fontWeight:700,
@@ -848,7 +848,7 @@ export default function CardAdvisor() {
       </div>
 
       {/* Content */}
-      <div style={{ padding:"32px 20px 20px",maxWidth:"520px",margin:"0 auto",position:"relative",zIndex:1 }}>
+      <div style={{ padding:"32px 20px 20px",maxWidth:"720px",margin:"0 auto",position:"relative",zIndex:1 }}>
 
         {/* WALLET */}
         {view === "wallet" && (
@@ -940,13 +940,20 @@ export default function CardAdvisor() {
                           onFocus={e => { e.target.style.borderColor="rgba(0,220,130,0.4)"; e.target.style.backgroundColor="rgba(0,220,130,0.03)"; }}
                           onBlur={e => { e.target.style.borderColor="rgba(255,255,255,0.06)"; e.target.style.backgroundColor="transparent"; }} />
                       </div>
+                      {input.length > 0 && (
+                        <button onClick={() => { setInput(""); setCat(null); ref.current?.focus(); }}
+                          style={{ background:"none",border:"none",fontSize:"20px",color:"rgba(255,255,255,0.35)",
+                            cursor:"pointer",padding:"4px 8px",flexShrink:0,lineHeight:1 }}>
+                          ✕
+                        </button>
+                      )}
                       <button onClick={handleSearch} disabled={!input.trim() || aiLoading}
-                        style={{ padding:"18px 20px",border:"none",borderRadius:"14px",
-                          background: !input.trim() || aiLoading ? "rgba(255,255,255,0.06)" : "linear-gradient(135deg,#00DC82 0%,#00C974 100%)",
+                        style={{ padding:"18px 32px",border:"none",borderRadius:"14px",
+                          background: !input.trim() || aiLoading ? "rgba(255,255,255,0.06)" : "#00DC82",
                           color: !input.trim() || aiLoading ? "rgba(255,255,255,0.25)" : "#0A0F1A",
-                          fontFamily:"'Space Grotesk',sans-serif",fontSize:"13px",fontWeight:700,cursor: !input.trim() || aiLoading ? "default" : "pointer",
-                          transition:"all 0.2s ease",flexShrink:0,
-                          boxShadow: !input.trim() || aiLoading ? "none" : "0 4px 16px rgba(0,220,130,0.25)" }}>
+                          fontFamily:"'Space Grotesk',sans-serif",fontSize:"14px",fontWeight:800,cursor: !input.trim() || aiLoading ? "default" : "pointer",
+                          transition:"all 0.2s ease",flexShrink:0,textTransform:"uppercase",letterSpacing:"0.08em",
+                          boxShadow: !input.trim() || aiLoading ? "none" : "0 0 20px rgba(0,220,130,0.3)" }}>
                         Search
                       </button>
                     </div>
@@ -1014,7 +1021,7 @@ export default function CardAdvisor() {
                   <div style={{ marginTop:"4px" }}>
                     <div style={{ fontSize:"10px",fontWeight:700,letterSpacing:"0.15em",textTransform:"uppercase",
                       color:"rgba(255,255,255,0.2)",marginBottom:"12px",fontFamily:"'Space Grotesk',sans-serif" }}>Quick Categories</div>
-                    <div className="cat-grid" style={{ display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"10px" }}>
+                    <div className="cat-grid" style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(100px,1fr))",gap:"10px" }}>
                       {(() => {
                         const defaultCats = ["dining","groceries","gas","travel","hotels","streaming"];
                         const allCats = Object.entries(CATEGORY_LABELS).filter(([k]) => k !== "general").map(([k]) => k);
@@ -1024,24 +1031,24 @@ export default function CardAdvisor() {
                             {catsToShow.map(k => (
                               <button key={k} onClick={() => setInput(CATEGORY_LABELS[k])}
                                 style={{ height:"96px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-                                  borderRadius:"12px",border:"1px solid rgba(75,85,99,0.5)",
+                                  padding:"16px",borderRadius:"12px",border:"1px solid rgba(75,85,99,0.5)",
                                   backgroundColor:"rgba(31,41,55,0.4)",textAlign:"center",cursor:"pointer",
                                   transition:"all 0.3s ease" }}
                                 onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(0,220,130,0.5)"; e.currentTarget.style.backgroundColor="rgba(31,41,55,0.6)"; e.currentTarget.querySelector('.cat-icon').style.filter="grayscale(0)"; }}
                                 onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(75,85,99,0.5)"; e.currentTarget.style.backgroundColor="rgba(31,41,55,0.4)"; e.currentTarget.querySelector('.cat-icon').style.filter="grayscale(0.5)"; }}>
-                                <span className="cat-icon" style={{ fontSize:"28px",display:"block",marginBottom:"6px",filter:"grayscale(0.5)",transition:"filter 0.3s ease" }}>{CATEGORY_ICONS[k]}</span>
-                                <span style={{ fontSize:"11px",fontFamily:"'Inter',sans-serif",color:"rgba(255,255,255,0.45)" }}>{CATEGORY_LABELS[k]}</span>
+                                <span className="cat-icon" style={{ fontSize:"30px",display:"block",marginBottom:"6px",filter:"grayscale(0.5)",transition:"filter 0.3s ease" }}>{CATEGORY_ICONS[k]}</span>
+                                <span style={{ fontSize:"13px",fontFamily:"'Inter',sans-serif",color:"rgba(255,255,255,0.45)" }}>{CATEGORY_LABELS[k]}</span>
                               </button>
                             ))}
                             <button onClick={() => setShowAllCats(!showAllCats)}
                               style={{ height:"96px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-                                borderRadius:"12px",border:"1px solid rgba(75,85,99,0.5)",
+                                padding:"16px",borderRadius:"12px",border:"1px solid rgba(75,85,99,0.5)",
                                 backgroundColor:"rgba(31,41,55,0.4)",textAlign:"center",cursor:"pointer",
                                 transition:"all 0.3s ease" }}
                               onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(0,220,130,0.5)"; e.currentTarget.style.backgroundColor="rgba(31,41,55,0.6)"; e.currentTarget.querySelector('.cat-icon').style.filter="grayscale(0)"; }}
                               onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(75,85,99,0.5)"; e.currentTarget.style.backgroundColor="rgba(31,41,55,0.4)"; e.currentTarget.querySelector('.cat-icon').style.filter="grayscale(0.5)"; }}>
-                              <span className="cat-icon" style={{ fontSize:"28px",display:"block",marginBottom:"6px",filter:"grayscale(0.5)",transition:"filter 0.3s ease" }}>{showAllCats ? "⬆️" : "···"}</span>
-                              <span style={{ fontSize:"11px",fontFamily:"'Inter',sans-serif",color:"rgba(255,255,255,0.45)" }}>{showAllCats ? "Less" : "More"}</span>
+                              <span className="cat-icon" style={{ fontSize:"30px",display:"block",marginBottom:"6px",filter:"grayscale(0.5)",transition:"filter 0.3s ease" }}>{showAllCats ? "⬆️" : "···"}</span>
+                              <span style={{ fontSize:"13px",fontFamily:"'Inter',sans-serif",color:"rgba(255,255,255,0.45)" }}>{showAllCats ? "Less" : "More"}</span>
                             </button>
                           </>
                         );
@@ -1067,15 +1074,15 @@ export default function CardAdvisor() {
                           if (!card) return null;
                           const isLight = card.id === "apple-card";
                           return (
-                            <div key={card.id} style={{ width:"280px",minWidth:"280px",height:"160px",borderRadius:"14px",background:card.gradient,
-                              padding:"20px",position:"relative",transition:"all 0.3s ease",cursor:"default",
+                            <div key={card.id} style={{ width:"300px",minWidth:"300px",height:"170px",borderRadius:"14px",background:card.gradient,
+                              padding:"24px",position:"relative",transition:"all 0.3s ease",cursor:"default",
                               boxShadow:"0 4px 12px rgba(0,0,0,0.2)" }}
                               onMouseEnter={e => { e.currentTarget.style.transform="translateY(-4px)"; e.currentTarget.style.boxShadow="0 8px 24px rgba(0,0,0,0.4)"; }}
                               onMouseLeave={e => { e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.boxShadow="0 4px 12px rgba(0,0,0,0.2)"; }}>
                               <div style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"16px",fontWeight:700,color:isLight?"#1A1A1A":"#FFF" }}>{card.shortName}</div>
                               <div style={{ fontSize:"10px",letterSpacing:"0.15em",color:isLight?"rgba(26,26,26,0.5)":"rgba(255,255,255,0.5)",marginTop:"4px" }}>{card.currency.toUpperCase()}</div>
-                              <div style={{ position:"absolute",top:"20px",right:"20px",fontSize:"18px",opacity:0.3 }}>⦿</div>
-                              <div style={{ position:"absolute",bottom:"20px",left:"20px",fontSize:"11px",color:isLight?"rgba(26,26,26,0.4)":"rgba(255,255,255,0.4)" }}>{card.issuer}</div>
+                              <div style={{ position:"absolute",top:"24px",right:"24px",fontSize:"18px",opacity:0.3 }}>⦿</div>
+                              <div style={{ position:"absolute",bottom:"24px",left:"24px",fontSize:"11px",color:isLight?"rgba(26,26,26,0.4)":"rgba(255,255,255,0.4)" }}>{card.issuer}</div>
                             </div>
                           );
                         })}
