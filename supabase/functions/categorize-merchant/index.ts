@@ -72,8 +72,8 @@ serve(async (req) => {
     return new Response(JSON.stringify({ category }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (e) {
-    return new Response(JSON.stringify({ category: "general", error: String(e) }), {
+  } catch {
+    return new Response(JSON.stringify({ category: "general" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
