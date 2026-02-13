@@ -530,6 +530,12 @@ export default function CardAdvisor() {
   const [search, setSearch] = useState("");
   const [showAllCats, setShowAllCats] = useState(false);
   const ref = useRef(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   // Auth state
   const [user, setUser] = useState(null);
@@ -812,12 +818,15 @@ export default function CardAdvisor() {
 
       {/* Nav Bar */}
       <div style={{ position:"sticky",top:0,zIndex:20,backdropFilter:"blur(10px)",WebkitBackdropFilter:"blur(10px)",backgroundColor:"rgba(10,15,26,0.8)",borderBottom:"1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 40px" }}>
+        <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",
+          padding: isMobile ? "10px 12px" : "12px 40px",
+          ...(isMobile ? { flexWrap:"wrap" } : {}) }}>
           <div style={{ display:"inline-flex",alignItems:"center",gap:"0px" }}>
             <span style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"13px",fontWeight:700,letterSpacing:"0.15em",color:"#FFF" }}>CARD</span>
             <span style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"13px",fontWeight:700,letterSpacing:"0.15em",color:"#00DC82" }}>ADVISOR</span>
           </div>
-          <div style={{ display:"flex",gap:"32px" }}>
+          <div style={{ display:"flex",gap: isMobile ? "24px" : "32px",
+            ...(isMobile ? { width:"100%",justifyContent:"center",marginTop:"8px",order:3 } : {}) }}>
             {[{key:"dashboard",label:"Dashboard"},{key:"wallet",label:"Wallet"},{key:"analytics",label:"Analytics"}].map(t => (
               <button key={t.key} onClick={() => { setView(t.key); if(t.key==="dashboard") setTimeout(()=>ref.current?.focus(),150); }}
                 style={{ background:"none",border:"none",padding:"4px 0",fontFamily:"'Space Grotesk',sans-serif",fontSize:"11px",fontWeight:700,
@@ -848,7 +857,7 @@ export default function CardAdvisor() {
       </div>
 
       {/* Content */}
-      <div style={{ padding:"32px 20px 20px",maxWidth:"960px",margin:"0 auto",position:"relative",zIndex:1 }}>
+      <div style={{ padding: isMobile ? "24px 12px 16px" : "32px 20px 20px",maxWidth:"960px",margin:"0 auto",position:"relative",zIndex:1 }}>
 
         {/* WALLET */}
         {view === "wallet" && (
@@ -903,7 +912,11 @@ export default function CardAdvisor() {
             ) : (
               <>
                 {/* Section A: Optimization Score + Active Streak */}
-                <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:"20px",paddingBottom:"20px",borderBottom:"1px solid rgba(255,255,255,0.06)",marginBottom:"20px" }}>
+                <div style={{ display:"flex",
+                  flexDirection: isMobile ? "column" : "row",
+                  justifyContent:"space-between",alignItems:"flex-start",
+                  gap: isMobile ? "16px" : "20px",
+                  paddingBottom:"20px",borderBottom:"1px solid rgba(255,255,255,0.06)",marginBottom:"20px" }}>
                   <div style={{ flex:1,minWidth:"200px" }}>
                     <div style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"10px",fontWeight:700,letterSpacing:"0.15em",textTransform:"uppercase",color:"rgba(255,255,255,0.25)",marginBottom:"8px" }}>Optimization Score</div>
                     <div style={{ display:"flex",alignItems:"baseline",gap:"2px" }}>
@@ -915,7 +928,7 @@ export default function CardAdvisor() {
                       <span style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"13px",color:"rgba(255,255,255,0.3)" }}>{" "}· {optScore.pct}</span>
                     </div>
                   </div>
-                  <div style={{ textAlign:"right" }}>
+                  <div style={{ textAlign: isMobile ? "left" : "right" }}>
                     <div style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"10px",fontWeight:700,letterSpacing:"0.15em",textTransform:"uppercase",color:"rgba(255,255,255,0.25)",marginBottom:"8px" }}>Active Streak</div>
                     <div style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"20px",fontWeight:800,color:"#FFF" }}>0 Days</div>
                     <div style={{ fontSize:"12px",color:"rgba(255,255,255,0.3)",marginTop:"4px" }}>Keep optimizing!</div>
@@ -923,7 +936,7 @@ export default function CardAdvisor() {
                 </div>
 
                 {/* Section C: Search Bar */}
-                <div style={{ position:"relative",margin:"32px 0" }}
+                <div style={{ position:"relative",margin: isMobile ? "20px 0" : "32px 0" }}
                   onMouseEnter={e => { const g = e.currentTarget.querySelector('.search-glow'); if(g) g.style.opacity='0.7'; }}
                   onMouseLeave={e => { const g = e.currentTarget.querySelector('.search-glow'); if(g) g.style.opacity='0.5'; }}>
                   <div className="search-glow" />
@@ -934,8 +947,8 @@ export default function CardAdvisor() {
                         <input ref={ref} type="text" placeholder="Where are you spending?" value={input}
                           onChange={e => { setInput(e.target.value); setLastTop(null); }}
                           onKeyDown={e => { if (e.key === "Enter") handleSearch(); }}
-                          style={{ width:"100%",padding:"20px 24px 20px 52px",border:"2px solid rgba(255,255,255,0.06)",borderRadius:"14px",
-                            backgroundColor:"transparent",fontFamily:"'Inter',sans-serif",fontSize:"20px",fontWeight:500,color:"#FFF",outline:"none",
+                          style={{ width:"100%",padding: isMobile ? "14px 20px 14px 44px" : "20px 24px 20px 52px",border:"2px solid rgba(255,255,255,0.06)",borderRadius:"14px",
+                            backgroundColor:"transparent",fontFamily:"'Inter',sans-serif",fontSize: isMobile ? "16px" : "20px",fontWeight:500,color:"#FFF",outline:"none",
                             transition:"all 0.2s ease" }}
                           onFocus={e => { e.target.style.borderColor="rgba(0,220,130,0.4)"; e.target.style.backgroundColor="rgba(0,220,130,0.03)"; }}
                           onBlur={e => { e.target.style.borderColor="rgba(255,255,255,0.06)"; e.target.style.backgroundColor="transparent"; }} />
@@ -948,10 +961,10 @@ export default function CardAdvisor() {
                         </button>
                       )}
                       <button onClick={handleSearch} disabled={!input.trim() || aiLoading}
-                        style={{ padding:"18px 32px",border:"none",borderRadius:"14px",
+                        style={{ padding: isMobile ? "14px 20px" : "18px 32px",border:"none",borderRadius:"14px",
                           background: !input.trim() || aiLoading ? "rgba(255,255,255,0.06)" : "#00DC82",
                           color: !input.trim() || aiLoading ? "rgba(255,255,255,0.25)" : "#0A0F1A",
-                          fontFamily:"'Space Grotesk',sans-serif",fontSize:"14px",fontWeight:800,cursor: !input.trim() || aiLoading ? "default" : "pointer",
+                          fontFamily:"'Space Grotesk',sans-serif",fontSize: isMobile ? "12px" : "14px",fontWeight:800,cursor: !input.trim() || aiLoading ? "default" : "pointer",
                           transition:"all 0.2s ease",flexShrink:0,textTransform:"uppercase",letterSpacing:"0.08em",
                           boxShadow: !input.trim() || aiLoading ? "none" : "0 0 20px rgba(0,220,130,0.3)" }}>
                         Search
@@ -1032,36 +1045,36 @@ export default function CardAdvisor() {
                           <>
                             {defaultCats.map(k => (
                               <button key={k} onClick={() => setInput(CATEGORY_LABELS[k])}
-                                style={{ height:"96px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+                                style={{ height: isMobile ? "80px" : "96px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
                                   padding:"16px",borderRadius:"12px",border:"1px solid rgba(75,85,99,0.5)",
                                   backgroundColor:"rgba(31,41,55,0.4)",textAlign:"center",cursor:"pointer",
                                   transition:"all 0.3s ease" }}
                                 onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(0,220,130,0.5)"; e.currentTarget.style.backgroundColor="rgba(31,41,55,0.6)"; e.currentTarget.querySelector('.cat-icon').style.filter="grayscale(0)"; }}
                                 onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(75,85,99,0.5)"; e.currentTarget.style.backgroundColor="rgba(31,41,55,0.4)"; e.currentTarget.querySelector('.cat-icon').style.filter="grayscale(0.5)"; }}>
-                                <span className="cat-icon" style={{ fontSize:"30px",display:"block",marginBottom:"6px",filter:"grayscale(0.5)",transition:"filter 0.3s ease" }}>{CATEGORY_ICONS[k]}</span>
-                                <span style={{ fontSize:"13px",fontFamily:"'Inter',sans-serif",color:"rgba(255,255,255,0.45)" }}>{CATEGORY_LABELS[k]}</span>
+                                <span className="cat-icon" style={{ fontSize: isMobile ? "24px" : "30px",display:"block",marginBottom:"6px",filter:"grayscale(0.5)",transition:"filter 0.3s ease" }}>{CATEGORY_ICONS[k]}</span>
+                                <span style={{ fontSize: isMobile ? "11px" : "13px",fontFamily:"'Inter',sans-serif",color:"rgba(255,255,255,0.45)" }}>{CATEGORY_LABELS[k]}</span>
                               </button>
                             ))}
                             <button onClick={() => setShowAllCats(!showAllCats)}
-                              style={{ height:"96px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+                              style={{ height: isMobile ? "80px" : "96px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
                                 padding:"16px",borderRadius:"12px",border:"1px solid rgba(75,85,99,0.5)",
                                 backgroundColor:"rgba(31,41,55,0.4)",textAlign:"center",cursor:"pointer",
                                 transition:"all 0.3s ease" }}
                               onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(0,220,130,0.5)"; e.currentTarget.style.backgroundColor="rgba(31,41,55,0.6)"; e.currentTarget.querySelector('.cat-icon').style.filter="grayscale(0)"; }}
                               onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(75,85,99,0.5)"; e.currentTarget.style.backgroundColor="rgba(31,41,55,0.4)"; e.currentTarget.querySelector('.cat-icon').style.filter="grayscale(0.5)"; }}>
-                              <span className="cat-icon" style={{ fontSize:"30px",display:"block",marginBottom:"6px",filter:"grayscale(0.5)",transition:"filter 0.3s ease" }}>{showAllCats ? "⬆️" : "···"}</span>
-                              <span style={{ fontSize:"13px",fontFamily:"'Inter',sans-serif",color:"rgba(255,255,255,0.45)" }}>{showAllCats ? "Less" : "More"}</span>
+                              <span className="cat-icon" style={{ fontSize: isMobile ? "24px" : "30px",display:"block",marginBottom:"6px",filter:"grayscale(0.5)",transition:"filter 0.3s ease" }}>{showAllCats ? "⬆️" : "···"}</span>
+                              <span style={{ fontSize: isMobile ? "11px" : "13px",fontFamily:"'Inter',sans-serif",color:"rgba(255,255,255,0.45)" }}>{showAllCats ? "Less" : "More"}</span>
                             </button>
                             {showAllCats && extraCats.map(k => (
                               <button key={k} onClick={() => setInput(CATEGORY_LABELS[k])}
-                                style={{ height:"96px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+                                style={{ height: isMobile ? "80px" : "96px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
                                   padding:"16px",borderRadius:"12px",border:"1px solid rgba(75,85,99,0.5)",
                                   backgroundColor:"rgba(31,41,55,0.4)",textAlign:"center",cursor:"pointer",
                                   transition:"all 0.3s ease" }}
                                 onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(0,220,130,0.5)"; e.currentTarget.style.backgroundColor="rgba(31,41,55,0.6)"; e.currentTarget.querySelector('.cat-icon').style.filter="grayscale(0)"; }}
                                 onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(75,85,99,0.5)"; e.currentTarget.style.backgroundColor="rgba(31,41,55,0.4)"; e.currentTarget.querySelector('.cat-icon').style.filter="grayscale(0.5)"; }}>
-                                <span className="cat-icon" style={{ fontSize:"30px",display:"block",marginBottom:"6px",filter:"grayscale(0.5)",transition:"filter 0.3s ease" }}>{CATEGORY_ICONS[k]}</span>
-                                <span style={{ fontSize:"13px",fontFamily:"'Inter',sans-serif",color:"rgba(255,255,255,0.45)" }}>{CATEGORY_LABELS[k]}</span>
+                                <span className="cat-icon" style={{ fontSize: isMobile ? "24px" : "30px",display:"block",marginBottom:"6px",filter:"grayscale(0.5)",transition:"filter 0.3s ease" }}>{CATEGORY_ICONS[k]}</span>
+                                <span style={{ fontSize: isMobile ? "11px" : "13px",fontFamily:"'Inter',sans-serif",color:"rgba(255,255,255,0.45)" }}>{CATEGORY_LABELS[k]}</span>
                               </button>
                             ))}
                           </>
@@ -1088,15 +1101,15 @@ export default function CardAdvisor() {
                           if (!card) return null;
                           const isLight = card.id === "apple-card";
                           return (
-                            <div key={card.id} style={{ width:"300px",minWidth:"300px",height:"170px",borderRadius:"14px",background:card.gradient,
-                              padding:"24px",position:"relative",transition:"all 0.3s ease",cursor:"default",
+                            <div key={card.id} style={{ width: isMobile ? "240px" : "300px",minWidth: isMobile ? "240px" : "300px",height: isMobile ? "150px" : "170px",borderRadius:"14px",background:card.gradient,
+                              padding: isMobile ? "16px" : "24px",position:"relative",transition:"all 0.3s ease",cursor:"default",
                               boxShadow:"0 4px 12px rgba(0,0,0,0.2)" }}
                               onMouseEnter={e => { e.currentTarget.style.transform="translateY(-4px)"; e.currentTarget.style.boxShadow="0 8px 24px rgba(0,0,0,0.4)"; }}
                               onMouseLeave={e => { e.currentTarget.style.transform="translateY(0)"; e.currentTarget.style.boxShadow="0 4px 12px rgba(0,0,0,0.2)"; }}>
                               <div style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"16px",fontWeight:700,color:isLight?"#1A1A1A":"#FFF" }}>{card.shortName}</div>
                               <div style={{ fontSize:"10px",letterSpacing:"0.15em",color:isLight?"rgba(26,26,26,0.5)":"rgba(255,255,255,0.5)",marginTop:"4px" }}>{card.currency.toUpperCase()}</div>
-                              <div style={{ position:"absolute",top:"24px",right:"24px",fontSize:"18px",opacity:0.3 }}>⦿</div>
-                              <div style={{ position:"absolute",bottom:"24px",left:"24px",fontSize:"11px",color:isLight?"rgba(26,26,26,0.4)":"rgba(255,255,255,0.4)" }}>{card.issuer}</div>
+                              <div style={{ position:"absolute",top: isMobile ? "16px" : "24px",right: isMobile ? "16px" : "24px",fontSize:"18px",opacity:0.3 }}>⦿</div>
+                              <div style={{ position:"absolute",bottom: isMobile ? "16px" : "24px",left: isMobile ? "16px" : "24px",fontSize:"11px",color:isLight?"rgba(26,26,26,0.4)":"rgba(255,255,255,0.4)" }}>{card.issuer}</div>
                             </div>
                           );
                         })}
