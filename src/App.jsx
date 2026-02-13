@@ -648,36 +648,41 @@ export default function CardAdvisor() {
 
   const toggle = (id) => setSel(p => p.includes(id) ? p.filter(c => c !== id) : [...p, id]);
 
-  const resolveCat = useCallback(async (i) => {
+  const resolveCatSync = useCallback((i) => {
     const l = i.toLowerCase().trim();
     if (!l) return null;
     if (MC[l]) return MC[l];
     for (const [m, c] of Object.entries(MC)) { if (l.includes(m) || m.includes(l)) return c; }
     for (const [k, v] of Object.entries(CATEGORY_LABELS)) { if (l === k || l === v.toLowerCase()) return k; }
+    return "general";
+  }, []);
+
+  const [cat, setCat] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  useEffect(() => {
+    const sync = resolveCatSync(input);
+    setCat(sync);
+    setAiLoading(false);
+  }, [input, resolveCatSync]);
+
+  const handleSearch = useCallback(async () => {
+    const sync = resolveCatSync(input);
+    if (sync !== "general") { setCat(sync); return; }
+    setAiLoading(true);
     try {
       const res = await fetch('https://fksmaxeyturvoywglvuq.supabase.co/functions/v1/categorize-merchant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ merchant: i }),
+        body: JSON.stringify({ merchant: input }),
       });
       const data = await res.json();
-      return data.category || "general";
+      setCat(data.category || "general");
     } catch {
-      return "general";
+      setCat("general");
     }
-  }, []);
-
-  const [cat, setCat] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const resolve = async () => {
-      const result = await resolveCat(input);
-      if (!cancelled) setCat(result);
-    };
-    resolve();
-    return () => { cancelled = true; };
-  }, [input, resolveCat]);
+    setAiLoading(false);
+  }, [input, resolveCatSync]);
 
   const ranked = useMemo(() => {
     if (!cat || sel.length === 0) return [];
@@ -890,14 +895,28 @@ export default function CardAdvisor() {
             ) : (
               <>
                 <div style={{ position:"relative",marginBottom:"20px" }}>
-                  <div style={{ position:"absolute",left:"16px",top:"50%",transform:"translateY(-50%)",fontSize:"16px",opacity:0.4,pointerEvents:"none" }}>🔍</div>
-                  <input ref={ref} type="text" placeholder="Where are you spending?" value={input}
-                    onChange={e => { setInput(e.target.value); setLastTop(null); }}
-                    style={{ width:"100%",padding:"16px 18px 16px 44px",border:"2px solid rgba(255,255,255,0.06)",borderRadius:"14px",
-                      backgroundColor:"rgba(255,255,255,0.03)",fontFamily:"'Outfit',sans-serif",fontSize:"15px",fontWeight:500,color:"#FFF",outline:"none",
-                      transition:"all 0.2s ease" }}
-                    onFocus={e => { e.target.style.borderColor="rgba(0,220,130,0.4)"; e.target.style.backgroundColor="rgba(0,220,130,0.03)"; }}
-                    onBlur={e => { e.target.style.borderColor="rgba(255,255,255,0.06)"; e.target.style.backgroundColor="rgba(255,255,255,0.03)"; }} />
+                  <div style={{ display:"flex",gap:"10px",alignItems:"center" }}>
+                    <div style={{ position:"relative",flex:1 }}>
+                      <div style={{ position:"absolute",left:"16px",top:"50%",transform:"translateY(-50%)",fontSize:"16px",opacity:0.4,pointerEvents:"none" }}>🔍</div>
+                      <input ref={ref} type="text" placeholder="Where are you spending?" value={input}
+                        onChange={e => { setInput(e.target.value); setLastTop(null); }}
+                        onKeyDown={e => { if (e.key === "Enter") handleSearch(); }}
+                        style={{ width:"100%",padding:"16px 18px 16px 44px",border:"2px solid rgba(255,255,255,0.06)",borderRadius:"14px",
+                          backgroundColor:"rgba(255,255,255,0.03)",fontFamily:"'Outfit',sans-serif",fontSize:"15px",fontWeight:500,color:"#FFF",outline:"none",
+                          transition:"all 0.2s ease" }}
+                        onFocus={e => { e.target.style.borderColor="rgba(0,220,130,0.4)"; e.target.style.backgroundColor="rgba(0,220,130,0.03)"; }}
+                        onBlur={e => { e.target.style.borderColor="rgba(255,255,255,0.06)"; e.target.style.backgroundColor="rgba(255,255,255,0.03)"; }} />
+                    </div>
+                    <button onClick={handleSearch} disabled={!input.trim() || aiLoading}
+                      style={{ padding:"16px 20px",border:"none",borderRadius:"14px",
+                        background: !input.trim() || aiLoading ? "rgba(255,255,255,0.06)" : "linear-gradient(135deg,#00DC82 0%,#00C974 100%)",
+                        color: !input.trim() || aiLoading ? "rgba(255,255,255,0.25)" : "#0A0F1A",
+                        fontFamily:"'Syne',sans-serif",fontSize:"13px",fontWeight:700,cursor: !input.trim() || aiLoading ? "default" : "pointer",
+                        transition:"all 0.2s ease",flexShrink:0,
+                        boxShadow: !input.trim() || aiLoading ? "none" : "0 4px 16px rgba(0,220,130,0.25)" }}>
+                      Search
+                    </button>
+                  </div>
 
                   {suggestions.length > 0 && input.length >= 2 && !MC[input.toLowerCase()] && (
                     <div style={{ position:"absolute",top:"calc(100% + 4px)",left:0,right:0,backgroundColor:"#141A2A",
@@ -916,7 +935,15 @@ export default function CardAdvisor() {
                   )}
                 </div>
 
-                {cat && input.trim() && (
+                {aiLoading && input.trim() && (
+                  <div style={{ display:"inline-flex",alignItems:"center",gap:"6px",padding:"6px 14px",borderRadius:"20px",
+                    backgroundColor:"rgba(0,220,130,0.06)",border:"1px solid rgba(0,220,130,0.15)",fontSize:"12px",fontWeight:600,
+                    color:"#00DC82",marginBottom:"16px",animation:"pulse 1.5s ease-in-out infinite" }}>
+                    Categorizing...
+                  </div>
+                )}
+
+                {!aiLoading && cat && input.trim() && (
                   <div style={{ display:"inline-flex",alignItems:"center",gap:"6px",padding:"6px 14px",borderRadius:"20px",
                     backgroundColor:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.06)",fontSize:"12px",fontWeight:500,
                     color:"rgba(255,255,255,0.5)",marginBottom:"16px",animation:"fUp 0.2s ease" }}>
