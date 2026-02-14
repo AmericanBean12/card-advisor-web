@@ -227,36 +227,27 @@ export default function CardAdvisor() {
 
   // Load wallet + stats: from Supabase if logged in, else localStorage
   useEffect(() => {
-    console.log("[LOAD] effect fired — authLoading:", authLoading, "user:", user?.id ?? null);
-    if (authLoading) { console.log("[LOAD] still loading auth, skipping"); return; }
+    if (authLoading) return;
     walletLoaded.current = false;
     if (user) {
-      console.log("[LOAD] fetching wallet from Supabase for user:", user.id);
       supabase
         .from("user_wallets")
         .select("card_ids, lookups, total_saved")
         .eq("user_id", user.id)
         .maybeSingle()
         .then(({ data, error }) => {
-          console.log("[LOAD] Supabase response — data:", data, "error:", error);
           if (error) console.error("Wallet load error:", error);
           if (data?.card_ids?.length) {
-            console.log("[LOAD] setting sel to", data.card_ids);
             setSel(data.card_ids);
             setView("dashboard");
-          } else {
-            console.log("[LOAD] no card_ids found in Supabase (data was:", data, ")");
           }
           if (data?.lookups != null) setLookups(data.lookups);
           if (data?.total_saved != null) setTotalSaved(data.total_saved);
           walletLoaded.current = true;
-          console.log("[LOAD] walletLoaded set to true");
         });
     } else {
-      console.log("[LOAD] no user, loading from localStorage");
       try {
         const s = window.localStorage?.getItem?.("ca_cards");
-        console.log("[LOAD] localStorage ca_cards:", s);
         if (s) {
           const parsed = JSON.parse(s);
           setSel(parsed);
@@ -277,20 +268,13 @@ export default function CardAdvisor() {
   // Only depends on [sel] — NOT on user/authLoading — so it only fires
   // when the user actually changes their card selection, never on auth changes.
   useEffect(() => {
-    console.log("[SAVE] effect fired — sel:", sel, "walletLoaded:", walletLoaded.current, "userRef:", userRef.current?.id ?? null);
-    if (!walletLoaded.current) { console.log("[SAVE] walletLoaded is false, skipping"); return; }
+    if (!walletLoaded.current) return;
     try { window.localStorage?.setItem?.("ca_cards", JSON.stringify(sel)); } catch {}
     if (userRef.current) {
       const payload = { user_id: userRef.current.id, card_ids: sel, lookups: lookupsRef.current, total_saved: totalSavedRef.current, updated_at: new Date().toISOString() };
-      console.log("[SAVE] upserting to Supabase:", payload);
       supabase
         .from("user_wallets")
-        .upsert(payload, { onConflict: "user_id" })
-        .then(({ data, error }) => {
-          console.log("[SAVE] Supabase upsert response — data:", data, "error:", error);
-        });
-    } else {
-      console.log("[SAVE] no user, saved to localStorage only");
+        .upsert(payload, { onConflict: "user_id" });
     }
   }, [sel]);
 
@@ -304,7 +288,6 @@ export default function CardAdvisor() {
       clearTimeout(statsTimer.current);
       statsTimer.current = setTimeout(() => {
         const payload = { user_id: userRef.current.id, lookups, total_saved: totalSaved, updated_at: new Date().toISOString() };
-        console.log("[SAVE-STATS] upserting to Supabase:", payload);
         supabase
           .from("user_wallets")
           .upsert(payload, { onConflict: "user_id" })
@@ -341,7 +324,7 @@ export default function CardAdvisor() {
     if (sync !== "general") { setCat(sync); return; }
     setAiLoading(true);
     try {
-      const res = await fetch('https://fksmaxeyturvoywglvuq.supabase.co/functions/v1/categorize-merchant', {
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/categorize-merchant`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ merchant: input }),

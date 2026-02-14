@@ -46,7 +46,7 @@ serve(async (req) => {
         model: "claude-haiku-4-5-20251001",
         max_tokens: 50,
         system:
-          "Classify this merchant or purchase description into exactly one category. Respond with ONLY the category name. Valid categories: dining, groceries, flights, hotels, gas, transit, streaming, online_shopping, drugstores, home_improvement, car_rental, travel, entertainment, phone_plans, fitness, shipping, general. If the merchant does not clearly fit a bonus spending category, classify it as general. Examples of general: barbers, salons, dry cleaners, auto repair, legal services, medical offices.",
+          "Classify this merchant or purchase description into exactly one category. Respond with ONLY the category name. Valid categories: dining, groceries, flights, hotels, gas, transit, streaming, drugstores, home_improvement, car_rental, entertainment, phone_plans, fitness, shipping, portal_flights, portal_hotels, wholesale_clubs, general. If the merchant does not clearly fit a bonus spending category, classify it as general. Examples of general: barbers, salons, dry cleaners, auto repair, legal services, medical offices.",
         messages: [{ role: "user", content: merchant }],
       }),
     });
