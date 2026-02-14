@@ -545,20 +545,171 @@ export default function CardAdvisor() {
                   backgroundColor:"rgba(255,255,255,0.03)",fontFamily:"'Inter',sans-serif",fontSize:"13px",color:"#FFF",outline:"none" }} />
             </div>
 
-            {filteredIssuers.map(issuer => {
-              const cards = filteredCards.filter(c => c.issuer === issuer);
-              if (cards.length === 0) return null;
+            {/* Section 1: SELECT A CARD — Horizontal Scroll */}
+            <div style={{ marginBottom:"24px" }}>
+              <div style={{ fontSize:"10px",fontWeight:700,letterSpacing:"0.15em",textTransform:"uppercase",
+                color:"rgba(255,255,255,0.25)",marginBottom:"12px",fontFamily:"'Space Grotesk',sans-serif" }}>Select a Card</div>
+              <div className="wallet-scroll" style={{ display:"flex",gap:"12px",overflowX:"auto",paddingBottom:"8px" }}>
+                {filteredCards.map(card => {
+                  const isSelected = sel.includes(card.id);
+                  return (
+                    <div key={card.id} onClick={() => toggle(card.id)}
+                      style={{ minWidth:"200px",height:"120px",borderRadius:"14px",cursor:"pointer",position:"relative",
+                        background: card.gradient || card.color || "linear-gradient(135deg,#1a1a2e,#16213e)",
+                        border: isSelected ? "2px solid #00DC82" : "2px solid rgba(255,255,255,0.08)",
+                        boxShadow: isSelected ? "0 0 16px rgba(0,220,130,0.3)" : "0 2px 8px rgba(0,0,0,0.2)",
+                        padding:"14px 16px",display:"flex",flexDirection:"column",justifyContent:"space-between",
+                        transition:"all 0.2s ease",flexShrink:0 }}>
+                      {isSelected && (
+                        <div style={{ position:"absolute",top:"8px",right:"8px",width:"20px",height:"20px",borderRadius:"50%",
+                          background:"#00DC82",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"12px",color:"#0A0F1A",fontWeight:800 }}>✓</div>
+                      )}
+                      <div style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"13px",fontWeight:700,color:"#FFF",
+                        overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",paddingRight:"24px" }}>{card.shortName}</div>
+                      <div>
+                        <div style={{ fontFamily:"'Space Mono',monospace",fontSize:"12px",color:"rgba(255,255,255,0.5)",letterSpacing:"0.15em",marginBottom:"4px" }}>••••  ••••  ••••  4242</div>
+                        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+                          <span style={{ fontSize:"9px",fontWeight:600,letterSpacing:"0.1em",textTransform:"uppercase",
+                            color:"rgba(255,255,255,0.4)",fontFamily:"'Space Grotesk',sans-serif" }}>{card.currency}</span>
+                          <span style={{ fontSize:"10px",color:"rgba(255,255,255,0.3)",fontFamily:"'Inter',sans-serif" }}>VISA</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Section 2+3: Detail Panel + Renewal Timeline */}
+            {sel.length > 0 && (() => {
+              const card = cardsDB.find(c => c.id === sel[0]);
+              if (!card) return null;
+              const topCats = Object.entries(card.categories || {}).filter(([k]) => k !== "general").sort((a, b) => b[1] - a[1]).slice(0, 3);
+              const glassStyle = { backgroundColor:"rgba(255,255,255,0.03)",border:"1.5px solid rgba(255,255,255,0.06)",borderRadius:"16px",padding: isMobile ? "20px" : "24px" };
               return (
-                <div key={issuer} style={{ marginBottom:"18px" }}>
-                  <div style={{ fontSize:"10px",fontWeight:700,letterSpacing:"0.15em",textTransform:"uppercase",
-                    color:"rgba(255,255,255,0.2)",marginBottom:"8px",fontFamily:"'Space Grotesk',sans-serif" }}>{issuer}</div>
-                  <div style={{ display:"flex",flexWrap:"wrap",gap:"8px" }}>
-                    {cards.map(card => <Chip key={card.id} card={card} selected={sel.includes(card.id)} onToggle={toggle} />)}
+                <div style={{ display:"flex",flexDirection: isMobile ? "column" : "row",gap:"16px",marginBottom:"24px" }}>
+                  {/* Left: Card Detail Panel */}
+                  <div style={{ flex:"0 0 60%",...glassStyle }}>
+                    <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"4px" }}>
+                      <div style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"20px",fontWeight:800,color:"#FFF" }}>{card.name}</div>
+                      <span style={{ fontSize:"18px",color:"rgba(255,255,255,0.3)",cursor:"pointer",lineHeight:1 }}>⋯</span>
+                    </div>
+                    <div style={{ fontSize:"11px",color:"rgba(255,255,255,0.35)",fontFamily:"'Inter',sans-serif",marginBottom:"20px" }}>
+                      {card.currency} · Manually Tracked
+                    </div>
+
+                    {/* Earning Rates */}
+                    <div style={{ fontSize:"10px",fontWeight:700,letterSpacing:"0.15em",textTransform:"uppercase",
+                      color:"rgba(255,255,255,0.25)",marginBottom:"10px",fontFamily:"'Space Grotesk',sans-serif" }}>Earning Rates</div>
+                    <div style={{ display:"grid",gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr",gap:"10px",marginBottom:"20px" }}>
+                      {topCats.map(([cat, rate]) => (
+                        <div key={cat} style={{ backgroundColor:"rgba(255,255,255,0.04)",borderRadius:"10px",padding:"12px",
+                          display:"flex",alignItems:"center",gap:"8px" }}>
+                          <span style={{ fontSize:"18px" }}>{CATEGORY_ICONS[cat] || "💳"}</span>
+                          <div>
+                            <div style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"16px",fontWeight:800,color:"#00DC82" }}>{rate}x</div>
+                            <div style={{ fontSize:"10px",color:"rgba(255,255,255,0.4)",fontFamily:"'Inter',sans-serif" }}>{CATEGORY_LABELS[cat] || cat}</div>
+                          </div>
+                        </div>
+                      ))}
+                      <div style={{ backgroundColor:"rgba(255,255,255,0.04)",borderRadius:"10px",padding:"12px",
+                        display:"flex",alignItems:"center",gap:"8px" }}>
+                        <span style={{ fontSize:"18px" }}>💎</span>
+                        <div>
+                          <div style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"16px",fontWeight:800,color:"#00DC82" }}>1.5¢</div>
+                          <div style={{ fontSize:"10px",color:"rgba(255,255,255,0.4)",fontFamily:"'Inter',sans-serif" }}>Points Value</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Recurring Credits */}
+                    <div style={{ fontSize:"10px",fontWeight:700,letterSpacing:"0.15em",textTransform:"uppercase",
+                      color:"rgba(255,255,255,0.25)",marginBottom:"10px",fontFamily:"'Space Grotesk',sans-serif" }}>Recurring Credits</div>
+                    <div style={{ display:"flex",flexDirection:"column",gap:"10px" }}>
+                      <div style={{ backgroundColor:"rgba(255,255,255,0.04)",borderRadius:"10px",padding:"12px",
+                        display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+                        <div>
+                          <div style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"13px",fontWeight:600,color:"#FFF" }}>$300 Annual Travel Credit</div>
+                          <div style={{ fontSize:"11px",color:"rgba(255,255,255,0.35)",marginTop:"2px" }}>Used: $270 / $30 left</div>
+                        </div>
+                      </div>
+                      <div style={{ backgroundColor:"rgba(255,255,255,0.04)",borderRadius:"10px",padding:"12px",
+                        display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+                        <div>
+                          <div style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"13px",fontWeight:600,color:"#FFF" }}>DoorDash Monthly Credit</div>
+                          <div style={{ fontSize:"11px",color:"rgba(255,255,255,0.35)",marginTop:"2px" }}>Redeemed?</div>
+                        </div>
+                        <div style={{ width:"36px",height:"20px",borderRadius:"10px",backgroundColor:"rgba(0,220,130,0.2)",position:"relative",cursor:"pointer" }}>
+                          <div style={{ width:"16px",height:"16px",borderRadius:"50%",backgroundColor:"#00DC82",position:"absolute",top:"2px",right:"2px" }} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: Renewal Timeline */}
+                  <div style={{ flex:"1",...glassStyle }}>
+                    <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px" }}>
+                      <div style={{ fontSize:"10px",fontWeight:700,letterSpacing:"0.15em",textTransform:"uppercase",
+                        color:"rgba(255,255,255,0.25)",fontFamily:"'Space Grotesk',sans-serif" }}>Upcoming Renewals</div>
+                      <span style={{ fontSize:"11px",color:"#00DC82",fontFamily:"'Inter',sans-serif",cursor:"pointer" }}>View All</span>
+                    </div>
+                    {[
+                      { label:"Amex Gold Renewal",time:"Renews in 15 days",amount:"-$250",color:"#FF6B6B" },
+                      { label:"Venture X Annual Fee",time:"Renews in 2 months",amount:"-$395",color:"#FFA94D" },
+                      { label:"Platinum Renewal",time:"Renews in 5 months",amount:"-$695",color:"rgba(255,255,255,0.3)" },
+                    ].map((entry, i) => (
+                      <div key={i} style={{ display:"flex",alignItems:"center",gap:"12px",padding:"12px 0",
+                        borderBottom: i < 2 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+                        <div style={{ width:"32px",height:"32px",borderRadius:"50%",backgroundColor: entry.color + "22",
+                          display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+                          <div style={{ width:"10px",height:"10px",borderRadius:"50%",backgroundColor: entry.color }} />
+                        </div>
+                        <div style={{ flex:1 }}>
+                          <div style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"13px",fontWeight:600,color:"#FFF" }}>{entry.label}</div>
+                          <div style={{ fontSize:"11px",color:"rgba(255,255,255,0.35)",marginTop:"2px" }}>{entry.time}</div>
+                        </div>
+                        <div style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"14px",fontWeight:700,color: entry.color }}>{entry.amount}</div>
+                      </div>
+                    ))}
+                    <div style={{ textAlign:"center",marginTop:"16px" }}>
+                      <span style={{ fontSize:"12px",color:"#00DC82",fontFamily:"'Inter',sans-serif",cursor:"pointer" }}>Analyze Your Value</span>
+                    </div>
                   </div>
                 </div>
               );
-            })}
+            })()}
 
+            {/* Section 4: Active Offers */}
+            {sel.length > 0 && (
+              <div style={{ backgroundColor:"rgba(255,255,255,0.03)",border:"1.5px solid rgba(255,255,255,0.06)",
+                borderRadius:"16px",padding: isMobile ? "20px" : "24px",marginBottom:"24px" }}>
+                <div style={{ fontSize:"10px",fontWeight:700,letterSpacing:"0.15em",textTransform:"uppercase",
+                  color:"rgba(255,255,255,0.25)",marginBottom:"16px",fontFamily:"'Space Grotesk',sans-serif" }}>Active Offers</div>
+                <div style={{ backgroundColor:"rgba(255,255,255,0.04)",borderRadius:"12px",padding:"16px" }}>
+                  <div style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"14px",fontWeight:700,color:"#FFF",marginBottom:"4px" }}>Welcome Bonus</div>
+                  <div style={{ fontSize:"12px",color:"rgba(255,255,255,0.45)",marginBottom:"14px",fontFamily:"'Inter',sans-serif" }}>
+                    Spend $4,000 in first 3 months to earn 60,000 points
+                  </div>
+                  {/* Progress bar */}
+                  <div style={{ position:"relative",height:"8px",borderRadius:"4px",backgroundColor:"rgba(255,255,255,0.06)",marginBottom:"8px" }}>
+                    <div style={{ width:"99%",height:"100%",borderRadius:"4px",background:"linear-gradient(90deg,#00DC82,#00C974)",position:"relative" }}>
+                      <div style={{ position:"absolute",right:"-6px",top:"-4px",width:"16px",height:"16px",borderRadius:"50%",
+                        backgroundColor:"#00DC82",border:"3px solid #0A0F1A" }} />
+                    </div>
+                  </div>
+                  <div style={{ display:"inline-block",backgroundColor:"rgba(0,220,130,0.12)",borderRadius:"6px",padding:"4px 10px",marginBottom:"10px" }}>
+                    <span style={{ fontFamily:"'Space Grotesk',sans-serif",fontSize:"12px",fontWeight:700,color:"#00DC82" }}>$1 left TO SPEND</span>
+                  </div>
+                  <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+                    <span style={{ fontSize:"10px",color:"rgba(255,255,255,0.3)",fontFamily:"'Inter',sans-serif" }}>$0 spent</span>
+                    <span style={{ fontSize:"10px",color:"rgba(255,255,255,0.3)",fontFamily:"'Inter',sans-serif" }}>Expires in 11 mths, 27 days</span>
+                    <span style={{ fontSize:"10px",color:"rgba(255,255,255,0.3)",fontFamily:"'Inter',sans-serif" }}>$4,000 goal</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* CTA Button */}
             {sel.length > 0 && (
               <button onClick={() => { setView("dashboard"); setTimeout(()=>ref.current?.focus(),150); }}
                 style={{ width:"100%",padding:"16px",background:"linear-gradient(135deg,#00DC82 0%,#00C974 100%)",
